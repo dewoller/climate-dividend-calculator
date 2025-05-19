@@ -1,28 +1,34 @@
-/* Basic reset */
+/* 
+ * Climate Dividend Calculator Stylesheet
+ * This file contains all styling for the calculator application.
+ */
+
+/* Basic reset - Normalize all elements */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Base page styling */
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     padding: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
+    max-width: 1000px; /* Limit width for better readability on large screens */
+    margin: 0 auto; /* Center the content */
 }
 
-/* App container */
+/* Main application container styling */
 #app-container {
     background: #f9f9f9;
     border-radius: 5px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
-/* Tab navigation */
+/* Tab navigation styling */
 #tab-navigation {
     display: flex;
     margin-bottom: 20px;
@@ -33,33 +39,35 @@ body {
     padding: 8px 16px;
     background: #f1f1f1;
     border: 1px solid #ddd;
-    border-bottom: none;
+    border-bottom: none; /* Bottom border is covered by active state */
     cursor: pointer;
     margin-right: 5px;
-    border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0; /* Round the top corners only */
 }
 
+/* Active tab button styling */
 .tab-button.active {
     background: #fff;
-    border-bottom: 1px solid #fff;
+    border-bottom: 1px solid #fff; /* Hide the bottom border for active tab */
     font-weight: bold;
 }
 
-/* Tab content */
+/* Tab content panel styling */
 .tab-content {
-    display: none;
+    display: none; /* Hidden by default, shown via JavaScript */
     padding: 15px;
     background: #fff;
-    border-radius: 0 0 5px 5px;
+    border-radius: 0 0 5px 5px; /* Round the bottom corners only */
 }
 
+/* Active tab content styling */
 .tab-content.active-tab {
-    display: block;
+    display: block; /* Show only the active tab content */
 }
 
-/* Form styling */
+/* Form element styling */
 .input-group {
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Space between input groups */
 }
 
 label {
@@ -72,13 +80,13 @@ input[type="number"] {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    width: 150px;
+    width: 150px; /* Fixed width for number inputs */
 }
 
-/* Error styling */
+/* Error styling for validation */
 .input-error {
     border: 1px solid red;
-    background-color: #fff0f0;
+    background-color: #fff0f0; /* Light red background for error state */
 }
 
 .error-message {
@@ -86,11 +94,11 @@ input[type="number"] {
     font-size: 0.8em;
     margin-left: 10px;
     display: block;
-    height: 1em; /* prevent layout jumps */
+    height: 1em; /* Fixed height to prevent layout jumps when errors appear/disappear */
     margin-top: 5px;
 }
 
-/* Output styling */
+/* Output section styling */
 h2 {
     margin: 20px 0 15px;
     border-bottom: 1px solid #eee;
@@ -106,10 +114,10 @@ h3 {
     margin-bottom: 20px;
 }
 
-/* Table styling */
+/* Results table styling */
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* Remove spacing between cells */
     margin-bottom: 20px;
 }
 
@@ -120,25 +128,25 @@ th, td {
 }
 
 th {
-    background-color: #f2f2f2;
+    background-color: #f2f2f2; /* Light gray background for headers */
     font-weight: bold;
 }
 
 /* Detail row styling for Calculation Details tab */
 .detail-row {
-    display: flex;
+    display: flex; /* Use flexbox for the two columns */
     padding: 8px 0;
     border-bottom: 1px solid #eee;
 }
 
 .detail-label {
-    flex: 1;
+    flex: 1; /* Take up half the space */
     font-weight: bold;
 }
 
 .detail-value {
-    flex: 1;
-    text-align: right;
+    flex: 1; /* Take up half the space */
+    text-align: right; /* Align values to the right */
 }
 
 /* Footer styling */
@@ -147,7 +155,7 @@ footer {
     padding-top: 20px;
     margin-top: 30px;
     font-size: 0.9em;
-    color: #666;
+    color: #666; /* Softer color for footer text */
 }
 
 #privacy-notice {
@@ -155,8 +163,9 @@ footer {
     font-size: 0.9em;
 }
 
-/* Responsive styling */
+/* Responsive styling for smaller screens */
 @media screen and (max-width: 600px) {
+    /* Stack tab buttons vertically on small screens */
     #tab-navigation {
         flex-direction: column;
     }
@@ -168,25 +177,28 @@ footer {
         border: 1px solid #ddd;
     }
     
+    /* Full width inputs on small screens */
     input[type="number"] {
         width: 100%;
     }
     
+    /* Smaller font for tables on small screens */
     table {
         font-size: 0.9em;
     }
     
     th, td {
-        padding: 8px 5px;
+        padding: 8px 5px; /* Reduce padding in table cells */
     }
     
+    /* Stack detail rows on small screens */
     .detail-row {
         flex-direction: column;
         padding: 10px 0;
     }
     
     .detail-value {
-        text-align: left;
+        text-align: left; /* Left align values when stacked */
         margin-top: 5px;
     }
 }

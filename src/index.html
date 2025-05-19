@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Climate Dividend Calculator</title>
+    <!-- Main stylesheet -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Main application container -->
     <div id="app-container">
+        <!-- Tab navigation bar -->
         <nav id="tab-navigation">
             <button id="btn-main-calculator" class="tab-button active">Main Calculator</button>
             <button id="btn-background-assumptions" class="tab-button">Background Assumptions</button>
             <button id="btn-calculation-details" class="tab-button">Calculation Details</button>
         </nav>
         
+        <!-- Main Calculator Tab - Default active tab -->
         <div id="main-calculator-tab" class="tab-content active-tab">
             <h2>User Inputs</h2>
+            <!-- Household structure inputs -->
             <div class="input-group">
                 <label for="numAdults">Number of adults in household</label>
                 <input type="number" id="numAdults" min="0" value="2">
@@ -28,6 +33,7 @@
                 <span id="numChildrenError" class="error-message"></span>
             </div>
             
+            <!-- Energy usage inputs -->
             <div class="input-group">
                 <label for="annualElectricityKwh">Annual household electricity use (kWh)</label>
                 <input type="number" id="annualElectricityKwh" min="0" value="5000">
@@ -46,10 +52,12 @@
                 <span id="annualPetrolLError" class="error-message"></span>
             </div>
             
+            <!-- Output section - Updated dynamically via JavaScript -->
             <h2>Outputs</h2>
             <h3 id="output-headline">Your household's net benefit is $X per year.</h3>
             <p id="output-narrative">With these settings, your household receives a total annual dividend of $Y and pays an estimated $Z in extra costs, giving a net benefit of $X per year.</p>
             
+            <!-- Results table showing annual and monthly figures -->
             <table id="output-table">
                 <thead>
                     <tr>
@@ -83,9 +91,11 @@
             </table>
         </div>
         
+        <!-- Background Assumptions Tab - Hidden by default -->
         <div id="background-assumptions-tab" class="tab-content">
             <h2>Background Policy Assumptions</h2>
             
+            <!-- Policy parameters - Carbon pricing and emissions -->
             <div class="input-group">
                 <label for="carbonPrice">Carbon Price ($/t CO₂-e)</label>
                 <input type="number" id="carbonPrice" min="0" value="50" step="0.01">
@@ -98,6 +108,7 @@
                 <span id="totalCoveredEmissionsError" class="error-message"></span>
             </div>
             
+            <!-- Administrative parameters -->
             <div class="input-group">
                 <label for="adminCostRate">Administrative Cost Rate</label>
                 <input type="number" id="adminCostRate" min="0" max="1" value="0.10" step="0.01">
@@ -116,6 +127,7 @@
                 <span id="childShareFactorError" class="error-message"></span>
             </div>
             
+            <!-- Emissions factors for different fuel types -->
             <div class="input-group">
                 <label for="gridEmissionsFactor">Grid Emissions Factor (t/kWh)</label>
                 <input type="number" id="gridEmissionsFactor" min="0" value="0.0007" step="any">
@@ -134,6 +146,7 @@
                 <span id="petrolEmissionsFactorError" class="error-message"></span>
             </div>
             
+            <!-- Pass-through rates for different fuel types -->
             <div class="input-group">
                 <label for="passThroughElectricity">Pass-Through Rate — Electricity</label>
                 <input type="number" id="passThroughElectricity" min="0" max="1" value="1" step="0.01">
@@ -153,9 +166,11 @@
             </div>
         </div>
         
+        <!-- Calculation Details Tab - Hidden by default -->
         <div id="calculation-details-tab" class="tab-content">
             <h2>Calculation Details (Read-Only)</h2>
             
+            <!-- Revenue and dividend calculation details -->
             <div class="detail-row">
                 <div class="detail-label">Gross Revenue:</div>
                 <div id="details-gross-revenue" class="detail-value">[value]</div>
@@ -171,6 +186,7 @@
                 <div id="details-per-adult-dividend" class="detail-value">[value]</div>
             </div>
             
+            <!-- Extra costs per unit details -->
             <div class="detail-row">
                 <div class="detail-label">Extra Cost per kWh Electricity:</div>
                 <div id="details-cost-electricity-per-unit" class="detail-value">[value]</div>
@@ -186,6 +202,7 @@
                 <div id="details-cost-petrol-per-unit" class="detail-value">[value]</div>
             </div>
             
+            <!-- Annual cost details by fuel type -->
             <div class="detail-row">
                 <div class="detail-label">Annual Extra Electricity Cost:</div>
                 <div id="details-annual-cost-electricity" class="detail-value">[value]</div>
@@ -201,6 +218,7 @@
                 <div id="details-annual-cost-petrol" class="detail-value">[value]</div>
             </div>
             
+            <!-- Total costs, dividend, and net benefit details -->
             <div class="detail-row">
                 <div class="detail-label">Total Annual Extra Household Cost:</div>
                 <div id="details-total-annual-household-cost" class="detail-value">[value]</div>
@@ -218,6 +236,7 @@
         </div>
     </div>
     
+    <!-- Footer with attribution and privacy notice -->
     <footer>
         <p>Model based on UNSW Australian Carbon Dividend Plan.</p>
         <p>Text, photos and graphics © Citizens' Climate Lobby (CCL) Australia or used with permission. All rights reserved. Text available under Creative Commons NC SA licence.</p>
@@ -226,6 +245,7 @@
         </div>
     </footer>
     
+    <!-- JavaScript files - calculator.js first, then app.js -->
     <script src="calculator.js"></script>
     <script src="app.js"></script>
 </body>

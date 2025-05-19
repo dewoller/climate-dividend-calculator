@@ -1,40 +1,50 @@
 /**
  * Climate Dividend Calculator - Core Calculation Logic
  * Based on UNSW Australian Carbon Dividend Plan
+ * 
+ * This file contains all the calculation functions for the Carbon Dividend Calculator.
+ * It implements the mathematical model for calculating dividends, costs, and net benefits
+ * based on user inputs and policy parameters.
  */
 
 /**
  * Default policy assumptions for the carbon dividend calculation
  * These are the baseline values that can be adjusted in the background assumptions tab
+ * All values are based on the UNSW Australian Carbon Dividend Plan model
  */
 const DEFAULT_POLICY_ASSUMPTIONS = {
-    carbonPrice: 50,                   // A$/t CO₂-e
-    totalCoveredEmissions: 466000000,  // t CO₂-e (466 Mt converted to t for consistent units)
-    adminCostRate: 0.10,               // Administrative cost rate (decimal)
-    eligibleAdultPopulation: 16000000, // Number of eligible adults
-    childShareFactor: 0,               // Child share factor (decimal)
-    gridEmissionsFactor: 0.0007,       // t/kWh
-    gasEmissionsFactor: 0.051,         // t/GJ
-    petrolEmissionsFactor: 0.0023,     // t/L
-    passThroughElectricity: 1,         // Decimal (1 = 100% pass-through)
-    passThroughGas: 1,                 // Decimal (1 = 100% pass-through)
-    passThroughPetrol: 1               // Decimal (1 = 100% pass-through)
+    carbonPrice: 50,                   // A$/t CO₂-e - The carbon price in Australian dollars per tonne of CO2 equivalent
+    totalCoveredEmissions: 466000000,  // t CO₂-e (466 Mt converted to t for consistent units) - Total emissions covered by the scheme
+    adminCostRate: 0.10,               // Administrative cost rate (decimal) - Fraction of gross revenue used for administration
+    eligibleAdultPopulation: 16000000, // Number of eligible adults - Population receiving dividends
+    childShareFactor: 0,               // Child share factor (decimal) - Portion of adult dividend allocated per child
+    gridEmissionsFactor: 0.0007,       // t/kWh - Carbon emissions per kilowatt-hour of electricity
+    gasEmissionsFactor: 0.051,         // t/GJ - Carbon emissions per gigajoule of gas
+    petrolEmissionsFactor: 0.0023,     // t/L - Carbon emissions per liter of petrol
+    passThroughElectricity: 1,         // Decimal (1 = 100% pass-through) - Portion of carbon price passed to consumers for electricity
+    passThroughGas: 1,                 // Decimal (1 = 100% pass-through) - Portion of carbon price passed to consumers for gas
+    passThroughPetrol: 1               // Decimal (1 = 100% pass-through) - Portion of carbon price passed to consumers for petrol
 };
 
 /**
  * Default user household inputs
  * These are the starting values for the main calculator tab
+ * Represents an average Australian household
  */
 const DEFAULT_USER_INPUTS = {
-    numAdults: 2,              // Number of adults in household
-    numChildren: 0,            // Number of eligible children
-    annualElectricityKwh: 5000, // Annual electricity usage in kWh
-    annualGasGj: 20,           // Annual gas usage in GJ
-    annualPetrolL: 1600        // Annual petrol usage in L
+    numAdults: 2,              // Number of adults in household - Default assumes two adults
+    numChildren: 0,            // Number of eligible children - Default assumes no children
+    annualElectricityKwh: 5000, // Annual electricity usage in kWh - Average household electricity consumption
+    annualGasGj: 20,           // Annual gas usage in GJ - Average household gas consumption
+    annualPetrolL: 1600        // Annual petrol usage in L - Average household petrol consumption
 };
 
 /**
  * Calculate gross revenue from carbon price and emissions
+ * Formula: G = P × E where:
+ * - G is the gross revenue
+ * - P is the carbon price
+ * - E is the total covered emissions
  * 
  * @param {number} carbonPrice - Carbon price in A$/t CO₂-e
  * @param {number} totalCoveredEmissions - Total covered emissions in t CO₂-e
@@ -47,6 +57,10 @@ function calculateGrossRevenue(carbonPrice, totalCoveredEmissions) {
 
 /**
  * Calculate net revenue after administrative costs
+ * Formula: R = G × (1 - r) where:
+ * - R is the net revenue
+ * - G is the gross revenue
+ * - r is the administrative cost rate
  * 
  * @param {number} grossRevenue - Gross revenue in A$
  * @param {number} adminCostRate - Administrative cost rate (0-1)
@@ -59,6 +73,10 @@ function calculateNetRevenue(grossRevenue, adminCostRate) {
 
 /**
  * Calculate annual dividend per adult
+ * Formula: D_adult = R / N where:
+ * - D_adult is the dividend per adult
+ * - R is the net revenue
+ * - N is the eligible adult population
  * 
  * @param {number} netRevenue - Net revenue in A$
  * @param {number} eligibleAdultPopulation - Number of eligible adults
@@ -75,6 +93,12 @@ function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
 
 /**
  * Calculate household dividend based on adults, children, and per-adult dividend
+ * Formula: D_household = (adults + c × children) × D_adult where:
+ * - D_household is the household dividend
+ * - adults is the number of adults in the household
+ * - c is the child share factor
+ * - children is the number of children in the household
+ * - D_adult is the per-adult dividend
  * 
  * @param {number} numAdults - Number of adults in household
  * @param {number} numChildren - Number of eligible children
@@ -93,6 +117,11 @@ function calculateHouseholdDividend(numAdults, numChildren, childShareFactor, ad
 
 /**
  * Calculate extra cost per unit for a fuel type
+ * Formula: Δp = P × EF × PT where:
+ * - Δp is the extra cost per unit
+ * - P is the carbon price
+ * - EF is the emissions factor for the fuel
+ * - PT is the pass-through rate
  * 
  * @param {number} carbonPrice - Carbon price in A$/t CO₂-e
  * @param {number} emissionsFactor - Emissions factor for the fuel type
@@ -106,6 +135,10 @@ function calculateExtraCostPerUnit(carbonPrice, emissionsFactor, passThroughRate
 
 /**
  * Calculate annual extra cost for a fuel type
+ * Formula: ΔC = Usage × Δp where:
+ * - ΔC is the annual extra cost
+ * - Usage is the annual consumption of the fuel
+ * - Δp is the extra cost per unit
  * 
  * @param {number} usage - Annual usage of the fuel
  * @param {number} extraCostPerUnit - Extra cost per unit
@@ -118,6 +151,7 @@ function calculateAnnualFuelCost(usage, extraCostPerUnit) {
 
 /**
  * Calculate total annual extra household cost
+ * Sum of all fuel-specific extra costs
  * 
  * @param {number} annualElectricityCost - Annual electricity extra cost
  * @param {number} annualGasCost - Annual gas extra cost
@@ -130,6 +164,9 @@ function calculateTotalExtraHouseholdCost(annualElectricityCost, annualGasCost, 
 
 /**
  * Calculate net annual benefit
+ * Formula: Net benefit = D_household - Total extra cost where:
+ * - D_household is the household dividend
+ * - Total extra cost is the sum of all extra costs for all fuels
  * 
  * @param {number|null} annualHouseholdDividend - Annual household dividend
  * @param {number} totalAnnualExtraCost - Total annual extra cost
@@ -145,6 +182,7 @@ function calculateNetBenefit(annualHouseholdDividend, totalAnnualExtraCost) {
 
 /**
  * Convert annual value to monthly value
+ * Simple division by 12 to provide monthly equivalents
  * 
  * @param {number|null} annualValue - Annual value
  * @returns {number|null} - Monthly value, or null if annualValue is null
@@ -165,6 +203,7 @@ function getMonthlyValue(annualValue) {
 
 /**
  * Format currency value as AUD
+ * Handles null values by returning an em-dash character
  * 
  * @param {number|null} value - The value to format
  * @param {number} decimals - Number of decimal places (default: 2)
@@ -202,33 +241,3 @@ if (typeof window !== 'undefined') {
         formatCurrency
     };
 }
-
-// Test snippet (for development only, remove or comment out for production)
-/*
-// Test the initial calculations
-const testGrossRevenue = calculateGrossRevenue(DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions);
-console.log('Test Gross Revenue:', testGrossRevenue); // Expected: 50 * 466,000,000 = 23,300,000,000
-const testNetRevenue = calculateNetRevenue(testGrossRevenue, DEFAULT_POLICY_ASSUMPTIONS.adminCostRate);
-console.log('Test Net Revenue:', testNetRevenue); // Expected: 23,300,000,000 * (1 - 0.10) = 20,970,000,000
-
-// Test division by zero handling
-console.log('Test Adult Dividend with zero population:', calculateAdultDividend(testNetRevenue, 0)); // Expected: null
-console.log('Test Adult Dividend with valid population:', calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation)); // Expected: ~1310.625
-
-// Test null propagation
-const nullAdultDividend = calculateAdultDividend(testNetRevenue, 0);
-console.log('Test Household Dividend with null adult dividend:', calculateHouseholdDividend(2, 1, 0.5, nullAdultDividend)); // Expected: null
-
-const validAdultDividend = calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
-const householdDiv = calculateHouseholdDividend(
-    DEFAULT_USER_INPUTS.numAdults, 
-    DEFAULT_USER_INPUTS.numChildren, 
-    DEFAULT_POLICY_ASSUMPTIONS.childShareFactor, 
-    validAdultDividend
-);
-console.log('Test Household Dividend with valid adult dividend:', householdDiv); // Expected: ~2621.25
-
-// Test formatCurrency with null
-console.log('Format null value:', formatCurrency(null)); // Expected: "—"
-console.log('Format valid value:', formatCurrency(1234.56)); // Expected: "$1,234.56"
-*/
