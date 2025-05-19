@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Header with logo -->
+    <header id="main-header">
+        <img src="https://images.squarespace-cdn.com/content/v1/62214867f8b1f7618b8a959b/5745ee7b-8444-41db-ad3f-1550b48d92fe/cclau_logo.png?format=1500w" alt="Citizens' Climate Lobby Australia Logo" id="header-logo">
+    </header>
+    
     <!-- Main application container -->
     <div id="app-container">
         <!-- Tab navigation bar -->
@@ -124,9 +129,9 @@
                 </div>
                 
                 <div class="input-group">
-                    <label for="childShareFactor">Child Share Factor</label>
-                    <input type="number" id="childShareFactor" min="0" value="0" step="0.1">
-                    <span id="childShareFactorError" class="error-message"></span>
+                <label for="childShareFactor">Child Share Factor</label>
+                <input type="number" id="childShareFactor" min="0" value="0.5" step="0.1">
+                <span id="childShareFactorError" class="error-message"></span>
                 </div>
                 
                 <!-- Emissions factors for different fuel types -->

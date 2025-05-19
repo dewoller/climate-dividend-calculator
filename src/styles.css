@@ -14,9 +14,23 @@
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    padding: 20px;
+    padding: 0;
     max-width: 1000px; /* Limit width for better readability on large screens */
     margin: 0 auto; /* Center the content */
+}
+
+/* Header styling */
+#main-header {
+    padding: 15px 0;
+    text-align: center;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+#header-logo {
+    max-width: 250px;
+    height: auto;
 }
 
 /* Main application container styling */
@@ -24,7 +38,7 @@ body {
     background: #f9f9f9;
     border-radius: 5px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin: 0 20px 20px 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
@@ -179,8 +193,8 @@ th {
 /* Footer styling */
 footer {
     border-top: 1px solid #ddd;
-    padding-top: 20px;
-    margin-top: 30px;
+    padding: 20px;
+    margin: 0 20px 30px 20px;
     font-size: 0.9em;
     color: #666; /* Softer color for footer text */
 }

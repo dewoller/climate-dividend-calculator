@@ -17,7 +17,7 @@ const DEFAULT_POLICY_ASSUMPTIONS = {
     totalCoveredEmissions: 466000000,  // t CO₂-e (466 Mt converted to t for consistent units) - Total emissions covered by the scheme
     adminCostRate: 0.10,               // Administrative cost rate (decimal) - Fraction of gross revenue used for administration
     eligibleAdultPopulation: 16000000, // Number of eligible adults - Population receiving dividends
-    childShareFactor: 0,               // Child share factor (decimal) - Portion of adult dividend allocated per child
+    childShareFactor: 0.5,               // Child share factor (decimal) - Portion of adult dividend allocated per child
     gridEmissionsFactor: 0.0007,       // t/kWh - Carbon emissions per kilowatt-hour of electricity
     gasEmissionsFactor: 0.051,         // t/GJ - Carbon emissions per gigajoule of gas
     petrolEmissionsFactor: 0.0023,     // t/L - Carbon emissions per liter of petrol
