@@ -62,13 +62,13 @@ function calculateNetRevenue(grossRevenue, adminCostRate) {
  * 
  * @param {number} netRevenue - Net revenue in A$
  * @param {number} eligibleAdultPopulation - Number of eligible adults
- * @returns {number} - Annual dividend per adult in A$, or 0 if population is 0
+ * @returns {number|null} - Annual dividend per adult in A$, or null if population is 0 or invalid
  */
 function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
     // D_adult = R / N
-    // Handle division by zero - return 0 if population is 0
-    if (eligibleAdultPopulation <= 0) {
-        return 0; // Return 0 instead of null for easier calculations later
+    // Handle division by zero - return null if population is 0 or invalid
+    if (eligibleAdultPopulation <= 0 || !isFinite(eligibleAdultPopulation)) {
+        return null;
     }
     return netRevenue / eligibleAdultPopulation;
 }
@@ -79,10 +79,14 @@ function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
  * @param {number} numAdults - Number of adults in household
  * @param {number} numChildren - Number of eligible children
  * @param {number} childShareFactor - Child share factor (decimal)
- * @param {number} adultAnnualDividend - Annual dividend per adult
- * @returns {number} - Total annual dividend for household
+ * @param {number|null} adultAnnualDividend - Annual dividend per adult
+ * @returns {number|null} - Total annual dividend for household, or null if adultAnnualDividend is null
  */
 function calculateHouseholdDividend(numAdults, numChildren, childShareFactor, adultAnnualDividend) {
+    // Propagate null if adultAnnualDividend is null
+    if (adultAnnualDividend === null) {
+        return null;
+    }
     // D_household = (adults + c × children) × D_adult
     return (numAdults + childShareFactor * numChildren) * adultAnnualDividend;
 }
@@ -127,36 +131,51 @@ function calculateTotalExtraHouseholdCost(annualElectricityCost, annualGasCost, 
 /**
  * Calculate net annual benefit
  * 
- * @param {number} annualHouseholdDividend - Annual household dividend
+ * @param {number|null} annualHouseholdDividend - Annual household dividend
  * @param {number} totalAnnualExtraCost - Total annual extra cost
- * @returns {number} - Net annual benefit in A$
+ * @returns {number|null} - Net annual benefit in A$, or null if annualHouseholdDividend is null
  */
 function calculateNetBenefit(annualHouseholdDividend, totalAnnualExtraCost) {
+    // Propagate null if household dividend is null
+    if (annualHouseholdDividend === null) {
+        return null;
+    }
     return annualHouseholdDividend - totalAnnualExtraCost;
 }
 
 /**
  * Convert annual value to monthly value
  * 
- * @param {number} annualValue - Annual value
- * @returns {number} - Monthly value
+ * @param {number|null} annualValue - Annual value
+ * @returns {number|null} - Monthly value, or null if annualValue is null
  */
 function getMonthlyValue(annualValue) {
-    // Handle undefined or null values
-    if (annualValue === undefined || annualValue === null) {
-        return 0;
+    // Propagate null value
+    if (annualValue === null) {
+        return null;
     }
+    
+    // Handle undefined values (shouldn't happen, but just in case)
+    if (annualValue === undefined) {
+        return null;
+    }
+    
     return annualValue / 12;
 }
 
 /**
  * Format currency value as AUD
  * 
- * @param {number} value - The value to format
+ * @param {number|null} value - The value to format
  * @param {number} decimals - Number of decimal places (default: 2)
- * @returns {string} - Formatted value in AUD
+ * @returns {string} - Formatted value in AUD, or "—" if value is null
  */
 function formatCurrency(value, decimals = 2) {
+    // Handle null value (division by zero)
+    if (value === null) {
+        return "—";
+    }
+    
     return value.toLocaleString('en-AU', {
         style: 'currency',
         currency: 'AUD',
@@ -191,58 +210,25 @@ const testGrossRevenue = calculateGrossRevenue(DEFAULT_POLICY_ASSUMPTIONS.carbon
 console.log('Test Gross Revenue:', testGrossRevenue); // Expected: 50 * 466,000,000 = 23,300,000,000
 const testNetRevenue = calculateNetRevenue(testGrossRevenue, DEFAULT_POLICY_ASSUMPTIONS.adminCostRate);
 console.log('Test Net Revenue:', testNetRevenue); // Expected: 23,300,000,000 * (1 - 0.10) = 20,970,000,000
-const testAdultDividend = calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
-console.log('Test Adult Dividend:', testAdultDividend); // Expected: 20,970,000,000 / 16,000,000 = 1310.625
 
-// Test the additional calculations
+// Test division by zero handling
+console.log('Test Adult Dividend with zero population:', calculateAdultDividend(testNetRevenue, 0)); // Expected: null
+console.log('Test Adult Dividend with valid population:', calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation)); // Expected: ~1310.625
+
+// Test null propagation
+const nullAdultDividend = calculateAdultDividend(testNetRevenue, 0);
+console.log('Test Household Dividend with null adult dividend:', calculateHouseholdDividend(2, 1, 0.5, nullAdultDividend)); // Expected: null
+
+const validAdultDividend = calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
 const householdDiv = calculateHouseholdDividend(
     DEFAULT_USER_INPUTS.numAdults, 
     DEFAULT_USER_INPUTS.numChildren, 
     DEFAULT_POLICY_ASSUMPTIONS.childShareFactor, 
-    testAdultDividend
+    validAdultDividend
 );
-console.log('Test Household Dividend:', householdDiv); // Expected: (2 + 0 * 0) * 1310.625 = 2621.25
+console.log('Test Household Dividend with valid adult dividend:', householdDiv); // Expected: ~2621.25
 
-// Electricity calculations
-const costPerKwh = calculateExtraCostPerUnit(
-    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
-    DEFAULT_POLICY_ASSUMPTIONS.gridEmissionsFactor, 
-    DEFAULT_POLICY_ASSUMPTIONS.passThroughElectricity
-);
-console.log('Test Cost Per kWh:', costPerKwh); // Expected: 50 * 0.0007 * 1 = 0.035
-const annualElecCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualElectricityKwh, costPerKwh);
-console.log('Test Annual Electricity Cost:', annualElecCost); // Expected: 5000 * 0.035 = 175
-
-// Gas calculations
-const costPerGj = calculateExtraCostPerUnit(
-    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
-    DEFAULT_POLICY_ASSUMPTIONS.gasEmissionsFactor, 
-    DEFAULT_POLICY_ASSUMPTIONS.passThroughGas
-);
-console.log('Test Cost Per GJ:', costPerGj); // Expected: 50 * 0.051 * 1 = 2.55
-const annualGasCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualGasGj, costPerGj);
-console.log('Test Annual Gas Cost:', annualGasCost); // Expected: 20 * 2.55 = 51
-
-// Petrol calculations
-const costPerLitre = calculateExtraCostPerUnit(
-    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
-    DEFAULT_POLICY_ASSUMPTIONS.petrolEmissionsFactor, 
-    DEFAULT_POLICY_ASSUMPTIONS.passThroughPetrol
-);
-console.log('Test Cost Per Litre:', costPerLitre); // Expected: 50 * 0.0023 * 1 = 0.115
-const annualPetrolCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualPetrolL, costPerLitre);
-console.log('Test Annual Petrol Cost:', annualPetrolCost); // Expected: 1600 * 0.115 = 184
-
-// Total cost and net benefit
-const totalExtraCost = calculateTotalExtraHouseholdCost(annualElecCost, annualGasCost, annualPetrolCost);
-console.log('Test Total Extra Cost:', totalExtraCost); // Expected: 175 + 51 + 184 = 410
-const netBenefit = calculateNetBenefit(householdDiv, totalExtraCost);
-console.log('Test Net Benefit:', netBenefit); // Expected: 2621.25 - 410 = 2211.25
-const monthlyNetBenefit = getMonthlyValue(netBenefit);
-console.log('Test Monthly Net Benefit:', monthlyNetBenefit); // Expected: 2211.25 / 12 = 184.27...
-
-// Format as currency
-console.log('Formatted Household Dividend:', formatCurrency(householdDiv)); // Expected: $2,621.25
-console.log('Formatted Net Benefit:', formatCurrency(netBenefit)); // Expected: $2,211.25
-console.log('Formatted Monthly Net Benefit:', formatCurrency(monthlyNetBenefit)); // Expected: $184.27
+// Test formatCurrency with null
+console.log('Format null value:', formatCurrency(null)); // Expected: "—"
+console.log('Format valid value:', formatCurrency(1234.56)); // Expected: "$1,234.56"
 */

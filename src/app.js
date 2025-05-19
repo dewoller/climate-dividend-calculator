@@ -139,11 +139,16 @@ btnCalculationDetails.addEventListener('click', () => {
 
 /**
  * Format a number as AUD currency
- * @param {number} value - The value to format
+ * @param {number|null} value - The value to format
  * @param {boolean} includeSign - Whether to include a + sign for positive values
- * @returns {string} - Formatted currency string
+ * @returns {string} - Formatted currency string or "—" for null values
  */
 function formatCurrency(value, includeSign = false) {
+    // Handle null value (division by zero)
+    if (value === null) {
+        return "—";
+    }
+    
     // Format using toLocaleString
     const formatted = value.toLocaleString('en-AU', {
         style: 'currency',
@@ -160,175 +165,244 @@ function formatCurrency(value, includeSign = false) {
     return formatted;
 }
 
+/**
+ * Format a unit cost (with unit)
+ * @param {number|null} value - The value to format
+ * @param {string} unit - The unit to append (e.g., "/kWh")
+ * @returns {string} - Formatted string with unit or "—" for null values
+ */
+function formatUnitCost(value, unit) {
+    if (value === null) {
+        return "—";
+    }
+    return `${formatCurrency(value)}${unit}`;
+}
+
+// ============================================================================
+// Input Validation Functions
+// ============================================================================
+
+/**
+ * Validate an input field, display error if invalid
+ * @param {HTMLInputElement} inputElement - The input element to validate
+ * @param {HTMLElement} errorElement - The error message element
+ * @param {number} defaultValue - Default value to use if validation fails
+ * @param {Object} options - Additional validation options
+ * @returns {Object} - Validation result object { isValid, value }
+ */
+function validateInput(inputElement, errorElement, defaultValue, options = {}) {
+    const value = inputElement.value.trim();
+    const { min = 0, max = Infinity, specialMsg = "" } = options;
+    
+    // Clear previous error state
+    errorElement.textContent = '';
+    inputElement.classList.remove('input-error');
+    
+    // If empty, use default (no error)
+    if (value === '') {
+        return { isValid: true, value: defaultValue };
+    }
+    
+    // Try to parse as number
+    const parsedValue = parseFloat(value);
+    
+    // Check if valid number
+    if (isNaN(parsedValue) || !isFinite(parsedValue)) {
+        errorElement.textContent = 'Invalid: must be a number.';
+        inputElement.classList.add('input-error');
+        return { isValid: false, value: defaultValue };
+    }
+    
+    // Check if within range
+    if (parsedValue < min) {
+        errorElement.textContent = `Invalid: must be at least ${min}.`;
+        inputElement.classList.add('input-error');
+        return { isValid: false, value: defaultValue };
+    }
+    
+    if (parsedValue > max) {
+        errorElement.textContent = `Invalid: must be no more than ${max}.`;
+        inputElement.classList.add('input-error');
+        return { isValid: false, value: defaultValue };
+    }
+    
+    // Check special conditions
+    if (specialMsg && !options.isValid?.(parsedValue)) {
+        errorElement.textContent = specialMsg;
+        inputElement.classList.add('input-error');
+        return { isValid: false, value: defaultValue };
+    }
+    
+    // Valid input
+    return { isValid: true, value: parsedValue };
+}
+
+/**
+ * Reset input to default value on blur if invalid
+ * @param {HTMLInputElement} inputElement - The input element
+ * @param {HTMLElement} errorElement - The error message element
+ * @param {number} defaultValue - Default value to set
+ */
+function setupBlurHandler(inputElement, errorElement, defaultValue) {
+    inputElement.addEventListener('blur', () => {
+        const value = inputElement.value.trim();
+        
+        // If empty or invalid, reset to default
+        if (value === '' || 
+            inputElement.classList.contains('input-error')) {
+            inputElement.value = defaultValue;
+            errorElement.textContent = '';
+            inputElement.classList.remove('input-error');
+            performCalculationsAndUpdateDisplay();
+        }
+    });
+}
+
 // ============================================================================
 // Input Gathering Functions
 // ============================================================================
 
 /**
- * Read values from Main Calculator input fields
- * @returns {object} Object containing user input values
+ * Read and validate values from Main Calculator input fields
+ * @returns {object} Object containing validated user input values
  */
 function getUserInputs() {
     // Start with default values
     const userInputs = {...Calculator.DEFAULT_USER_INPUTS};
     
-    // Parse and update each value, fallback to default if invalid
-    try {
-        const numAdults = parseFloat(numAdultsInput.value);
-        if (!isNaN(numAdults) && isFinite(numAdults) && numAdults >= 0) {
-            userInputs.numAdults = numAdults;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    // Validate each input and update values
+    const numAdultsResult = validateInput(
+        numAdultsInput, 
+        numAdultsError, 
+        Calculator.DEFAULT_USER_INPUTS.numAdults
+    );
+    userInputs.numAdults = numAdultsResult.value;
     
-    try {
-        const numChildren = parseFloat(numChildrenInput.value);
-        if (!isNaN(numChildren) && isFinite(numChildren) && numChildren >= 0) {
-            userInputs.numChildren = numChildren;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const numChildrenResult = validateInput(
+        numChildrenInput, 
+        numChildrenError, 
+        Calculator.DEFAULT_USER_INPUTS.numChildren
+    );
+    userInputs.numChildren = numChildrenResult.value;
     
-    try {
-        const annualElectricityKwh = parseFloat(annualElectricityKwhInput.value);
-        if (!isNaN(annualElectricityKwh) && isFinite(annualElectricityKwh) && annualElectricityKwh >= 0) {
-            userInputs.annualElectricityKwh = annualElectricityKwh;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const annualElectricityKwhResult = validateInput(
+        annualElectricityKwhInput, 
+        annualElectricityKwhError, 
+        Calculator.DEFAULT_USER_INPUTS.annualElectricityKwh
+    );
+    userInputs.annualElectricityKwh = annualElectricityKwhResult.value;
     
-    try {
-        const annualGasGj = parseFloat(annualGasGjInput.value);
-        if (!isNaN(annualGasGj) && isFinite(annualGasGj) && annualGasGj >= 0) {
-            userInputs.annualGasGj = annualGasGj;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const annualGasGjResult = validateInput(
+        annualGasGjInput, 
+        annualGasGjError, 
+        Calculator.DEFAULT_USER_INPUTS.annualGasGj
+    );
+    userInputs.annualGasGj = annualGasGjResult.value;
     
-    try {
-        const annualPetrolL = parseFloat(annualPetrolLInput.value);
-        if (!isNaN(annualPetrolL) && isFinite(annualPetrolL) && annualPetrolL >= 0) {
-            userInputs.annualPetrolL = annualPetrolL;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const annualPetrolLResult = validateInput(
+        annualPetrolLInput, 
+        annualPetrolLError, 
+        Calculator.DEFAULT_USER_INPUTS.annualPetrolL
+    );
+    userInputs.annualPetrolL = annualPetrolLResult.value;
     
     return userInputs;
 }
 
 /**
- * Read values from Background Assumptions input fields
- * @returns {object} Object containing policy assumption values
+ * Read and validate values from Background Assumptions input fields
+ * @returns {object} Object containing validated policy assumption values
  */
 function getPolicyAssumptions() {
     // Start with default values
     const policyAssumptions = {...Calculator.DEFAULT_POLICY_ASSUMPTIONS};
     
-    // Parse and update each value, fallback to default if invalid
-    try {
-        const carbonPrice = parseFloat(carbonPriceInput.value);
-        if (!isNaN(carbonPrice) && isFinite(carbonPrice) && carbonPrice >= 0) {
-            policyAssumptions.carbonPrice = carbonPrice;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    // Validate each input and update values
+    const carbonPriceResult = validateInput(
+        carbonPriceInput, 
+        carbonPriceError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.carbonPrice
+    );
+    policyAssumptions.carbonPrice = carbonPriceResult.value;
     
-    try {
-        // For totalCoveredEmissions, we convert from Mt to t (multiply by 1,000,000)
-        const totalCoveredEmissionsMt = parseFloat(totalCoveredEmissionsInput.value);
-        if (!isNaN(totalCoveredEmissionsMt) && isFinite(totalCoveredEmissionsMt) && totalCoveredEmissionsMt >= 0) {
-            policyAssumptions.totalCoveredEmissions = totalCoveredEmissionsMt * 1000000;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    // For totalCoveredEmissions, we convert from Mt to t (multiply by 1,000,000)
+    const totalCoveredEmissionsResult = validateInput(
+        totalCoveredEmissionsInput, 
+        totalCoveredEmissionsError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions / 1000000
+    );
+    policyAssumptions.totalCoveredEmissions = totalCoveredEmissionsResult.value * 1000000;
     
-    try {
-        const adminCostRate = parseFloat(adminCostRateInput.value);
-        if (!isNaN(adminCostRate) && isFinite(adminCostRate) && adminCostRate >= 0 && adminCostRate <= 1) {
-            policyAssumptions.adminCostRate = adminCostRate;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const adminCostRateResult = validateInput(
+        adminCostRateInput, 
+        adminCostRateError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.adminCostRate,
+        { min: 0, max: 1 }
+    );
+    policyAssumptions.adminCostRate = adminCostRateResult.value;
     
-    try {
-        const eligibleAdultPopulation = parseFloat(eligibleAdultPopulationInput.value);
-        if (!isNaN(eligibleAdultPopulation) && isFinite(eligibleAdultPopulation) && eligibleAdultPopulation > 0) {
-            policyAssumptions.eligibleAdultPopulation = eligibleAdultPopulation;
+    const eligibleAdultPopulationResult = validateInput(
+        eligibleAdultPopulationInput, 
+        eligibleAdultPopulationError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation,
+        { 
+            min: 0, // Allow 0 now, it will be handled by the calculator functions
+            specialMsg: "Population must be greater than 0 for calculations."
         }
-    } catch (e) {
-        // Keep default value
-    }
+    );
+    policyAssumptions.eligibleAdultPopulation = eligibleAdultPopulationResult.value;
     
-    try {
-        const childShareFactor = parseFloat(childShareFactorInput.value);
-        if (!isNaN(childShareFactor) && isFinite(childShareFactor) && childShareFactor >= 0) {
-            policyAssumptions.childShareFactor = childShareFactor;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const childShareFactorResult = validateInput(
+        childShareFactorInput, 
+        childShareFactorError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.childShareFactor
+    );
+    policyAssumptions.childShareFactor = childShareFactorResult.value;
     
-    try {
-        const gridEmissionsFactor = parseFloat(gridEmissionsFactorInput.value);
-        if (!isNaN(gridEmissionsFactor) && isFinite(gridEmissionsFactor) && gridEmissionsFactor >= 0) {
-            policyAssumptions.gridEmissionsFactor = gridEmissionsFactor;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const gridEmissionsFactorResult = validateInput(
+        gridEmissionsFactorInput, 
+        gridEmissionsFactorError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.gridEmissionsFactor
+    );
+    policyAssumptions.gridEmissionsFactor = gridEmissionsFactorResult.value;
     
-    try {
-        const gasEmissionsFactor = parseFloat(gasEmissionsFactorInput.value);
-        if (!isNaN(gasEmissionsFactor) && isFinite(gasEmissionsFactor) && gasEmissionsFactor >= 0) {
-            policyAssumptions.gasEmissionsFactor = gasEmissionsFactor;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const gasEmissionsFactorResult = validateInput(
+        gasEmissionsFactorInput, 
+        gasEmissionsFactorError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.gasEmissionsFactor
+    );
+    policyAssumptions.gasEmissionsFactor = gasEmissionsFactorResult.value;
     
-    try {
-        const petrolEmissionsFactor = parseFloat(petrolEmissionsFactorInput.value);
-        if (!isNaN(petrolEmissionsFactor) && isFinite(petrolEmissionsFactor) && petrolEmissionsFactor >= 0) {
-            policyAssumptions.petrolEmissionsFactor = petrolEmissionsFactor;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const petrolEmissionsFactorResult = validateInput(
+        petrolEmissionsFactorInput, 
+        petrolEmissionsFactorError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.petrolEmissionsFactor
+    );
+    policyAssumptions.petrolEmissionsFactor = petrolEmissionsFactorResult.value;
     
-    try {
-        const passThroughElectricity = parseFloat(passThroughElectricityInput.value);
-        if (!isNaN(passThroughElectricity) && isFinite(passThroughElectricity) && passThroughElectricity >= 0 && passThroughElectricity <= 1) {
-            policyAssumptions.passThroughElectricity = passThroughElectricity;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const passThroughElectricityResult = validateInput(
+        passThroughElectricityInput, 
+        passThroughElectricityError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughElectricity,
+        { min: 0, max: 1 }
+    );
+    policyAssumptions.passThroughElectricity = passThroughElectricityResult.value;
     
-    try {
-        const passThroughGas = parseFloat(passThroughGasInput.value);
-        if (!isNaN(passThroughGas) && isFinite(passThroughGas) && passThroughGas >= 0 && passThroughGas <= 1) {
-            policyAssumptions.passThroughGas = passThroughGas;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const passThroughGasResult = validateInput(
+        passThroughGasInput, 
+        passThroughGasError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughGas,
+        { min: 0, max: 1 }
+    );
+    policyAssumptions.passThroughGas = passThroughGasResult.value;
     
-    try {
-        const passThroughPetrol = parseFloat(passThroughPetrolInput.value);
-        if (!isNaN(passThroughPetrol) && isFinite(passThroughPetrol) && passThroughPetrol >= 0 && passThroughPetrol <= 1) {
-            policyAssumptions.passThroughPetrol = passThroughPetrol;
-        }
-    } catch (e) {
-        // Keep default value
-    }
+    const passThroughPetrolResult = validateInput(
+        passThroughPetrolInput, 
+        passThroughPetrolError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughPetrol,
+        { min: 0, max: 1 }
+    );
+    policyAssumptions.passThroughPetrol = passThroughPetrolResult.value;
     
     return policyAssumptions;
 }
@@ -341,7 +415,7 @@ function getPolicyAssumptions() {
  * Perform all calculations and update display
  */
 function performCalculationsAndUpdateDisplay() {
-    // Get current inputs
+    // Get current inputs with validation
     const userInputs = getUserInputs();
     const policyAssumptions = getPolicyAssumptions();
     
@@ -423,37 +497,58 @@ function performCalculationsAndUpdateDisplay() {
     
     // Update Main Calculator Outputs
     
-    // Headline - handle positive/negative net benefit
-    if (netAnnualBenefit >= 0) {
-        outputHeadline.textContent = `Your household's net benefit is ${formatCurrency(netAnnualBenefit)} per year.`;
+    // Handle division by zero case (null values)
+    if (adultAnnualDividend === null) {
+        // When adult dividend is null (division by zero), update outputs accordingly
+        outputHeadline.textContent = `Unable to calculate net benefit with population of zero.`;
+        outputNarrative.textContent = `With these settings, dividend calculation is not possible (population is zero). Please enter a positive population value.`;
+        
+        // Update table values with "—" for affected fields
+        tableAdultDividendAnnual.textContent = "—";
+        tableAdultDividendMonthly.textContent = "—";
+        tableHouseholdDividendAnnual.textContent = "—";
+        tableHouseholdDividendMonthly.textContent = "—";
+        tableNetBenefitAnnual.textContent = "—";
+        tableNetBenefitMonthly.textContent = "—";
+        
+        // Extra costs can still be calculated
+        tableExtraCostAnnual.textContent = formatCurrency(totalAnnualExtraCost);
+        tableExtraCostMonthly.textContent = formatCurrency(totalMonthlyExtraCost);
     } else {
-        // Display as positive number but indicate it's a cost
-        outputHeadline.textContent = `Your household's net cost is ${formatCurrency(-netAnnualBenefit)} per year.`;
+        // Normal case - all values calculated correctly
+        
+        // Headline - handle positive/negative net benefit
+        if (netAnnualBenefit >= 0) {
+            outputHeadline.textContent = `Your household's net benefit is ${formatCurrency(netAnnualBenefit)} per year.`;
+        } else {
+            // Display as positive number but indicate it's a cost
+            outputHeadline.textContent = `Your household's net cost is ${formatCurrency(-netAnnualBenefit)} per year.`;
+        }
+        
+        // Narrative
+        outputNarrative.textContent = `With these settings, your household receives a total annual dividend of ${formatCurrency(householdAnnualDividend)} and pays an estimated ${formatCurrency(totalAnnualExtraCost)} in extra costs, giving a net ${netAnnualBenefit >= 0 ? 'benefit' : 'cost'} of ${formatCurrency(Math.abs(netAnnualBenefit))} per year.`;
+        
+        // Update table values
+        tableAdultDividendAnnual.textContent = formatCurrency(adultAnnualDividend);
+        tableAdultDividendMonthly.textContent = formatCurrency(adultMonthlyDividend);
+        
+        tableHouseholdDividendAnnual.textContent = formatCurrency(householdAnnualDividend);
+        tableHouseholdDividendMonthly.textContent = formatCurrency(householdMonthlyDividend);
+        
+        tableExtraCostAnnual.textContent = formatCurrency(totalAnnualExtraCost);
+        tableExtraCostMonthly.textContent = formatCurrency(totalMonthlyExtraCost);
+        
+        tableNetBenefitAnnual.textContent = formatCurrency(netAnnualBenefit, true);
+        tableNetBenefitMonthly.textContent = formatCurrency(netMonthlyBenefit, true);
     }
-    
-    // Narrative
-    outputNarrative.textContent = `With these settings, your household receives a total annual dividend of ${formatCurrency(householdAnnualDividend)} and pays an estimated ${formatCurrency(totalAnnualExtraCost)} in extra costs, giving a net ${netAnnualBenefit >= 0 ? 'benefit' : 'cost'} of ${formatCurrency(Math.abs(netAnnualBenefit))} per year.`;
-    
-    // Update table values
-    tableAdultDividendAnnual.textContent = formatCurrency(adultAnnualDividend);
-    tableAdultDividendMonthly.textContent = formatCurrency(adultMonthlyDividend);
-    
-    tableHouseholdDividendAnnual.textContent = formatCurrency(householdAnnualDividend);
-    tableHouseholdDividendMonthly.textContent = formatCurrency(householdMonthlyDividend);
-    
-    tableExtraCostAnnual.textContent = formatCurrency(totalAnnualExtraCost);
-    tableExtraCostMonthly.textContent = formatCurrency(totalMonthlyExtraCost);
-    
-    tableNetBenefitAnnual.textContent = formatCurrency(netAnnualBenefit, true);
-    tableNetBenefitMonthly.textContent = formatCurrency(netMonthlyBenefit, true);
     
     // Update Calculation Details Tab
     detailsGrossRevenue.textContent = formatCurrency(grossRevenue);
     detailsNetRevenue.textContent = formatCurrency(netRevenue);
     detailsPerAdultDividend.textContent = formatCurrency(adultAnnualDividend);
-    detailsCostElectricityPerUnit.textContent = `${formatCurrency(extraCostPerKwh)}/kWh`;
-    detailsCostGasPerUnit.textContent = `${formatCurrency(extraCostPerGj)}/GJ`;
-    detailsCostPetrolPerUnit.textContent = `${formatCurrency(extraCostPerLitre)}/L`;
+    detailsCostElectricityPerUnit.textContent = formatUnitCost(extraCostPerKwh, "/kWh");
+    detailsCostGasPerUnit.textContent = formatUnitCost(extraCostPerGj, "/GJ");
+    detailsCostPetrolPerUnit.textContent = formatUnitCost(extraCostPerLitre, "/L");
     detailsAnnualCostElectricity.textContent = formatCurrency(annualElecCost);
     detailsAnnualCostGas.textContent = formatCurrency(annualGasCost);
     detailsAnnualCostPetrol.textContent = formatCurrency(annualPetrolCost);
@@ -466,25 +561,59 @@ function performCalculationsAndUpdateDisplay() {
 // Event Listeners for Inputs
 // ============================================================================
 
-// Main Calculator input event listeners
-numAdultsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-numChildrenInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-annualElectricityKwhInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-annualGasGjInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-annualPetrolLInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+// Set up input event listeners for all inputs
+function setupInputEventListeners() {
+    // Main Calculator inputs
+    numAdultsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    numChildrenInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    annualElectricityKwhInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    annualGasGjInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    annualPetrolLInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    
+    // Background Assumptions inputs
+    carbonPriceInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    totalCoveredEmissionsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    adminCostRateInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    eligibleAdultPopulationInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    childShareFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    gridEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    gasEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    petrolEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    passThroughElectricityInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    passThroughGasInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    passThroughPetrolInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+}
 
-// Background Assumptions input event listeners
-carbonPriceInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-totalCoveredEmissionsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-adminCostRateInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-eligibleAdultPopulationInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-childShareFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-gridEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-gasEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-petrolEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-passThroughElectricityInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-passThroughGasInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-passThroughPetrolInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+// Set up blur event handlers to revert to defaults if invalid
+function setupBlurEventListeners() {
+    // Main Calculator inputs
+    setupBlurHandler(numAdultsInput, numAdultsError, Calculator.DEFAULT_USER_INPUTS.numAdults);
+    setupBlurHandler(numChildrenInput, numChildrenError, Calculator.DEFAULT_USER_INPUTS.numChildren);
+    setupBlurHandler(annualElectricityKwhInput, annualElectricityKwhError, Calculator.DEFAULT_USER_INPUTS.annualElectricityKwh);
+    setupBlurHandler(annualGasGjInput, annualGasGjError, Calculator.DEFAULT_USER_INPUTS.annualGasGj);
+    setupBlurHandler(annualPetrolLInput, annualPetrolLError, Calculator.DEFAULT_USER_INPUTS.annualPetrolL);
+    
+    // Background Assumptions inputs
+    setupBlurHandler(carbonPriceInput, carbonPriceError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.carbonPrice);
+    // For totalCoveredEmissions, we store Mt in the UI but t in the calculator
+    setupBlurHandler(totalCoveredEmissionsInput, totalCoveredEmissionsError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions / 1000000);
+    setupBlurHandler(adminCostRateInput, adminCostRateError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.adminCostRate);
+    setupBlurHandler(eligibleAdultPopulationInput, eligibleAdultPopulationError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
+    setupBlurHandler(childShareFactorInput, childShareFactorError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.childShareFactor);
+    setupBlurHandler(gridEmissionsFactorInput, gridEmissionsFactorError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.gridEmissionsFactor);
+    setupBlurHandler(gasEmissionsFactorInput, gasEmissionsFactorError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.gasEmissionsFactor);
+    setupBlurHandler(petrolEmissionsFactorInput, petrolEmissionsFactorError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.petrolEmissionsFactor);
+    setupBlurHandler(passThroughElectricityInput, passThroughElectricityError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughElectricity);
+    setupBlurHandler(passThroughGasInput, passThroughGasError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughGas);
+    setupBlurHandler(passThroughPetrolInput, passThroughPetrolError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.passThroughPetrol);
+}
 
 // ============================================================================
 // Initialize the application
@@ -493,6 +622,10 @@ passThroughPetrolInput.addEventListener('input', performCalculationsAndUpdateDis
 document.addEventListener('DOMContentLoaded', () => {
     // Show the main calculator tab by default
     showTab('main-calculator-tab');
+    
+    // Set up all event listeners
+    setupInputEventListeners();
+    setupBlurEventListeners();
     
     // Perform initial calculations and display results
     performCalculationsAndUpdateDisplay();
