@@ -79,12 +79,12 @@ function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
  * @param {number} numAdults - Number of adults in household
  * @param {number} numChildren - Number of eligible children
  * @param {number} childShareFactor - Child share factor (decimal)
- * @param {number} adultDividend - Annual dividend per adult
+ * @param {number} adultAnnualDividend - Annual dividend per adult
  * @returns {number} - Total annual dividend for household
  */
-function calculateHouseholdDividend(numAdults, numChildren, childShareFactor, adultDividend) {
+function calculateHouseholdDividend(numAdults, numChildren, childShareFactor, adultAnnualDividend) {
     // D_household = (adults + c × children) × D_adult
-    return (numAdults + childShareFactor * numChildren) * adultDividend;
+    return (numAdults + childShareFactor * numChildren) * adultAnnualDividend;
 }
 
 /**
@@ -92,47 +92,47 @@ function calculateHouseholdDividend(numAdults, numChildren, childShareFactor, ad
  * 
  * @param {number} carbonPrice - Carbon price in A$/t CO₂-e
  * @param {number} emissionsFactor - Emissions factor for the fuel type
- * @param {number} passThrough - Pass-through rate (0-1)
+ * @param {number} passThroughRate - Pass-through rate (0-1)
  * @returns {number} - Extra cost per unit in A$
  */
-function calculateUnitCost(carbonPrice, emissionsFactor, passThrough) {
+function calculateExtraCostPerUnit(carbonPrice, emissionsFactor, passThroughRate) {
     // Δp = P × EF × PT
-    return carbonPrice * emissionsFactor * passThrough;
+    return carbonPrice * emissionsFactor * passThroughRate;
 }
 
 /**
  * Calculate annual extra cost for a fuel type
  * 
  * @param {number} usage - Annual usage of the fuel
- * @param {number} unitCost - Extra cost per unit
+ * @param {number} extraCostPerUnit - Extra cost per unit
  * @returns {number} - Annual extra cost in A$
  */
-function calculateAnnualCost(usage, unitCost) {
+function calculateAnnualFuelCost(usage, extraCostPerUnit) {
     // ΔC = Usage × Δp
-    return usage * unitCost;
+    return usage * extraCostPerUnit;
 }
 
 /**
  * Calculate total annual extra household cost
  * 
- * @param {number} electricityCost - Annual electricity extra cost
- * @param {number} gasCost - Annual gas extra cost
- * @param {number} petrolCost - Annual petrol extra cost
+ * @param {number} annualElectricityCost - Annual electricity extra cost
+ * @param {number} annualGasCost - Annual gas extra cost
+ * @param {number} annualPetrolCost - Annual petrol extra cost
  * @returns {number} - Total annual extra cost in A$
  */
-function calculateTotalExtraCost(electricityCost, gasCost, petrolCost) {
-    return electricityCost + gasCost + petrolCost;
+function calculateTotalExtraHouseholdCost(annualElectricityCost, annualGasCost, annualPetrolCost) {
+    return annualElectricityCost + annualGasCost + annualPetrolCost;
 }
 
 /**
  * Calculate net annual benefit
  * 
- * @param {number} householdDividend - Annual household dividend
- * @param {number} totalExtraCost - Total annual extra cost
+ * @param {number} annualHouseholdDividend - Annual household dividend
+ * @param {number} totalAnnualExtraCost - Total annual extra cost
  * @returns {number} - Net annual benefit in A$
  */
-function calculateNetBenefit(householdDividend, totalExtraCost) {
-    return householdDividend - totalExtraCost;
+function calculateNetBenefit(annualHouseholdDividend, totalAnnualExtraCost) {
+    return annualHouseholdDividend - totalAnnualExtraCost;
 }
 
 /**
@@ -141,7 +141,11 @@ function calculateNetBenefit(householdDividend, totalExtraCost) {
  * @param {number} annualValue - Annual value
  * @returns {number} - Monthly value
  */
-function calculateMonthlyValue(annualValue) {
+function getMonthlyValue(annualValue) {
+    // Handle undefined or null values
+    if (annualValue === undefined || annualValue === null) {
+        return 0;
+    }
     return annualValue / 12;
 }
 
@@ -171,21 +175,74 @@ if (typeof window !== 'undefined') {
         calculateNetRevenue,
         calculateAdultDividend,
         calculateHouseholdDividend,
-        calculateUnitCost,
-        calculateAnnualCost,
-        calculateTotalExtraCost,
+        calculateExtraCostPerUnit,
+        calculateAnnualFuelCost,
+        calculateTotalExtraHouseholdCost,
         calculateNetBenefit,
-        calculateMonthlyValue,
+        getMonthlyValue,
         formatCurrency
     };
 }
 
 // Test snippet (for development only, remove or comment out for production)
 /*
+// Test the initial calculations
 const testGrossRevenue = calculateGrossRevenue(DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions);
 console.log('Test Gross Revenue:', testGrossRevenue); // Expected: 50 * 466,000,000 = 23,300,000,000
 const testNetRevenue = calculateNetRevenue(testGrossRevenue, DEFAULT_POLICY_ASSUMPTIONS.adminCostRate);
 console.log('Test Net Revenue:', testNetRevenue); // Expected: 23,300,000,000 * (1 - 0.10) = 20,970,000,000
 const testAdultDividend = calculateAdultDividend(testNetRevenue, DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
 console.log('Test Adult Dividend:', testAdultDividend); // Expected: 20,970,000,000 / 16,000,000 = 1310.625
+
+// Test the additional calculations
+const householdDiv = calculateHouseholdDividend(
+    DEFAULT_USER_INPUTS.numAdults, 
+    DEFAULT_USER_INPUTS.numChildren, 
+    DEFAULT_POLICY_ASSUMPTIONS.childShareFactor, 
+    testAdultDividend
+);
+console.log('Test Household Dividend:', householdDiv); // Expected: (2 + 0 * 0) * 1310.625 = 2621.25
+
+// Electricity calculations
+const costPerKwh = calculateExtraCostPerUnit(
+    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
+    DEFAULT_POLICY_ASSUMPTIONS.gridEmissionsFactor, 
+    DEFAULT_POLICY_ASSUMPTIONS.passThroughElectricity
+);
+console.log('Test Cost Per kWh:', costPerKwh); // Expected: 50 * 0.0007 * 1 = 0.035
+const annualElecCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualElectricityKwh, costPerKwh);
+console.log('Test Annual Electricity Cost:', annualElecCost); // Expected: 5000 * 0.035 = 175
+
+// Gas calculations
+const costPerGj = calculateExtraCostPerUnit(
+    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
+    DEFAULT_POLICY_ASSUMPTIONS.gasEmissionsFactor, 
+    DEFAULT_POLICY_ASSUMPTIONS.passThroughGas
+);
+console.log('Test Cost Per GJ:', costPerGj); // Expected: 50 * 0.051 * 1 = 2.55
+const annualGasCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualGasGj, costPerGj);
+console.log('Test Annual Gas Cost:', annualGasCost); // Expected: 20 * 2.55 = 51
+
+// Petrol calculations
+const costPerLitre = calculateExtraCostPerUnit(
+    DEFAULT_POLICY_ASSUMPTIONS.carbonPrice, 
+    DEFAULT_POLICY_ASSUMPTIONS.petrolEmissionsFactor, 
+    DEFAULT_POLICY_ASSUMPTIONS.passThroughPetrol
+);
+console.log('Test Cost Per Litre:', costPerLitre); // Expected: 50 * 0.0023 * 1 = 0.115
+const annualPetrolCost = calculateAnnualFuelCost(DEFAULT_USER_INPUTS.annualPetrolL, costPerLitre);
+console.log('Test Annual Petrol Cost:', annualPetrolCost); // Expected: 1600 * 0.115 = 184
+
+// Total cost and net benefit
+const totalExtraCost = calculateTotalExtraHouseholdCost(annualElecCost, annualGasCost, annualPetrolCost);
+console.log('Test Total Extra Cost:', totalExtraCost); // Expected: 175 + 51 + 184 = 410
+const netBenefit = calculateNetBenefit(householdDiv, totalExtraCost);
+console.log('Test Net Benefit:', netBenefit); // Expected: 2621.25 - 410 = 2211.25
+const monthlyNetBenefit = getMonthlyValue(netBenefit);
+console.log('Test Monthly Net Benefit:', monthlyNetBenefit); // Expected: 2211.25 / 12 = 184.27...
+
+// Format as currency
+console.log('Formatted Household Dividend:', formatCurrency(householdDiv)); // Expected: $2,621.25
+console.log('Formatted Net Benefit:', formatCurrency(netBenefit)); // Expected: $2,211.25
+console.log('Formatted Monthly Net Benefit:', formatCurrency(monthlyNetBenefit)); // Expected: $184.27
 */

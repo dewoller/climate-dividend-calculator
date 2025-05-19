@@ -75,11 +75,19 @@ input[type="number"] {
     width: 150px;
 }
 
+/* Error styling */
+.input-error {
+    border: 1px solid red;
+    background-color: #fff0f0;
+}
+
 .error-message {
     color: red;
     font-size: 0.8em;
     margin-left: 10px;
-    display: inline-block;
+    display: block;
+    height: 1em; /* prevent layout jumps */
+    margin-top: 5px;
 }
 
 /* Output styling */
