@@ -28,6 +28,12 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
+/* Create a container for the input fields and labels for better alignment */
+.input-container {
+    max-width: 600px; /* Limit width to keep inputs aligned */
+    margin: 0 auto; /* Center the input container */
+}
+
 /* Tab navigation styling */
 #tab-navigation {
     display: flex;
@@ -68,19 +74,30 @@ body {
 /* Form element styling */
 .input-group {
     margin-bottom: 15px; /* Space between input groups */
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 label {
-    display: block;
-    margin-bottom: 5px;
     font-weight: bold;
+    margin-right: 10px;
+    width: 300px; /* Fixed width for labels for alignment */
+    text-align: right; /* Right-align text to align with input boxes */
+    padding-right: 10px; /* Add some space between text and input */
 }
 
 input[type="number"] {
-    padding: 8px;
+    padding: 6px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    width: 150px; /* Fixed width for number inputs */
+    width: 120px; /* Fixed width for number inputs */
+    margin-right: 10px;
+}
+
+.error-message {
+    flex-basis: 100%;
+    margin-left: calc(300px + 10px); /* Match label width + margin */
 }
 
 /* Error styling for validation */
@@ -94,8 +111,9 @@ input[type="number"] {
     font-size: 0.8em;
     margin-left: 10px;
     display: block;
-    height: 1em; /* Fixed height to prevent layout jumps when errors appear/disappear */
+    min-height: 1em; /* Minimum height to prevent layout jumps when errors appear/disappear */
     margin-top: 5px;
+    font-weight: bold; /* Make error messages stand out more */
 }
 
 /* Output section styling */
@@ -112,6 +130,15 @@ h3 {
 
 #output-narrative {
     margin-bottom: 20px;
+}
+
+/* Color styling for positive/negative values */
+.positive-value {
+    color: #007500; /* Green color for positive values */
+}
+
+.negative-value {
+    color: #d30000; /* Red color for negative values */
 }
 
 /* Results table styling */
@@ -177,9 +204,27 @@ footer {
         border: 1px solid #ddd;
     }
     
+    /* Adjust input groups for mobile layout */
+    .input-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    label {
+        margin-bottom: 5px;
+        width: 100%;
+        text-align: left; /* Reset to left alignment on mobile */
+        padding-right: 0;
+    }
+    
     /* Full width inputs on small screens */
     input[type="number"] {
         width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .error-message {
+        margin-left: 0;
     }
     
     /* Smaller font for tables on small screens */

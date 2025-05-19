@@ -86,6 +86,7 @@ function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
     // D_adult = R / N
     // Handle division by zero - return null if population is 0 or invalid
     if (eligibleAdultPopulation <= 0 || !isFinite(eligibleAdultPopulation)) {
+        console.warn("Invalid eligible adult population: " + eligibleAdultPopulation);
         return null;
     }
     return netRevenue / eligibleAdultPopulation;

@@ -20,36 +20,38 @@
         <!-- Main Calculator Tab - Default active tab -->
         <div id="main-calculator-tab" class="tab-content active-tab">
             <h2>User Inputs</h2>
-            <!-- Household structure inputs -->
-            <div class="input-group">
-                <label for="numAdults">Number of adults in household</label>
-                <input type="number" id="numAdults" min="0" value="2">
-                <span id="numAdultsError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="numChildren">Number of eligible children</label>
-                <input type="number" id="numChildren" min="0" value="0">
-                <span id="numChildrenError" class="error-message"></span>
-            </div>
-            
-            <!-- Energy usage inputs -->
-            <div class="input-group">
-                <label for="annualElectricityKwh">Annual household electricity use (kWh)</label>
-                <input type="number" id="annualElectricityKwh" min="0" value="5000">
-                <span id="annualElectricityKwhError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="annualGasGj">Annual household gas use (GJ)</label>
-                <input type="number" id="annualGasGj" min="0" value="20">
-                <span id="annualGasGjError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="annualPetrolL">Annual household petrol use (L)</label>
-                <input type="number" id="annualPetrolL" min="0" value="1600">
-                <span id="annualPetrolLError" class="error-message"></span>
+            <div class="input-container">
+                <!-- Household structure inputs -->
+                <div class="input-group">
+                    <label for="numAdults">Number of adults in household</label>
+                    <input type="number" id="numAdults" min="0" value="2">
+                    <span id="numAdultsError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="numChildren">Number of eligible children</label>
+                    <input type="number" id="numChildren" min="0" value="0">
+                    <span id="numChildrenError" class="error-message"></span>
+                </div>
+                
+                <!-- Energy usage inputs -->
+                <div class="input-group">
+                    <label for="annualElectricityKwh">Annual household electricity use (kWh)</label>
+                    <input type="number" id="annualElectricityKwh" min="0" value="5000">
+                    <span id="annualElectricityKwhError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="annualGasGj">Annual household gas use (GJ)</label>
+                    <input type="number" id="annualGasGj" min="0" value="20">
+                    <span id="annualGasGjError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="annualPetrolL">Annual household petrol use (L)</label>
+                    <input type="number" id="annualPetrolL" min="0" value="1600">
+                    <span id="annualPetrolLError" class="error-message"></span>
+                </div>
             </div>
             
             <!-- Output section - Updated dynamically via JavaScript -->
@@ -91,78 +93,79 @@
             </table>
         </div>
         
-        <!-- Background Assumptions Tab - Hidden by default -->
         <div id="background-assumptions-tab" class="tab-content">
             <h2>Background Policy Assumptions</h2>
             
-            <!-- Policy parameters - Carbon pricing and emissions -->
-            <div class="input-group">
-                <label for="carbonPrice">Carbon Price ($/t CO₂-e)</label>
-                <input type="number" id="carbonPrice" min="0" value="50" step="0.01">
-                <span id="carbonPriceError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="totalCoveredEmissions">Total Covered Emissions (Mt CO₂-e)</label>
-                <input type="number" id="totalCoveredEmissions" min="0" value="466" step="0.01">
-                <span id="totalCoveredEmissionsError" class="error-message"></span>
-            </div>
-            
-            <!-- Administrative parameters -->
-            <div class="input-group">
-                <label for="adminCostRate">Administrative Cost Rate</label>
-                <input type="number" id="adminCostRate" min="0" max="1" value="0.10" step="0.01">
-                <span id="adminCostRateError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="eligibleAdultPopulation">Eligible Adult Population</label>
-                <input type="number" id="eligibleAdultPopulation" min="1" value="16000000">
-                <span id="eligibleAdultPopulationError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="childShareFactor">Child Share Factor</label>
-                <input type="number" id="childShareFactor" min="0" value="0" step="0.1">
-                <span id="childShareFactorError" class="error-message"></span>
-            </div>
-            
-            <!-- Emissions factors for different fuel types -->
-            <div class="input-group">
-                <label for="gridEmissionsFactor">Grid Emissions Factor (t/kWh)</label>
-                <input type="number" id="gridEmissionsFactor" min="0" value="0.0007" step="any">
-                <span id="gridEmissionsFactorError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="gasEmissionsFactor">Gas Emissions Factor (t/GJ)</label>
-                <input type="number" id="gasEmissionsFactor" min="0" value="0.051" step="any">
-                <span id="gasEmissionsFactorError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="petrolEmissionsFactor">Petrol Emissions Factor (t/L)</label>
-                <input type="number" id="petrolEmissionsFactor" min="0" value="0.0023" step="any">
-                <span id="petrolEmissionsFactorError" class="error-message"></span>
-            </div>
-            
-            <!-- Pass-through rates for different fuel types -->
-            <div class="input-group">
-                <label for="passThroughElectricity">Pass-Through Rate — Electricity</label>
-                <input type="number" id="passThroughElectricity" min="0" max="1" value="1" step="0.01">
-                <span id="passThroughElectricityError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="passThroughGas">Pass-Through Rate — Gas</label>
-                <input type="number" id="passThroughGas" min="0" max="1" value="1" step="0.01">
-                <span id="passThroughGasError" class="error-message"></span>
-            </div>
-            
-            <div class="input-group">
-                <label for="passThroughPetrol">Pass-Through Rate — Petrol</label>
-                <input type="number" id="passThroughPetrol" min="0" max="1" value="1" step="0.01">
-                <span id="passThroughPetrolError" class="error-message"></span>
+            <div class="input-container">
+                <!-- Policy parameters - Carbon pricing and emissions -->
+                <div class="input-group">
+                    <label for="carbonPrice">Carbon Price ($/t CO₂-e)</label>
+                    <input type="number" id="carbonPrice" min="0" value="50" step="0.01">
+                    <span id="carbonPriceError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="totalCoveredEmissions">Total Covered Emissions (Mt CO₂-e)</label>
+                    <input type="number" id="totalCoveredEmissions" min="0" value="466" step="0.01">
+                    <span id="totalCoveredEmissionsError" class="error-message"></span>
+                </div>
+                
+                <!-- Administrative parameters -->
+                <div class="input-group">
+                    <label for="adminCostRate">Administrative Cost Rate</label>
+                    <input type="number" id="adminCostRate" min="0" max="1" value="0.10" step="0.01">
+                    <span id="adminCostRateError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="eligibleAdultPopulation">Eligible Adult Population</label>
+                    <input type="number" id="eligibleAdultPopulation" min="1" step="1" required value="16000000">
+                    <span id="eligibleAdultPopulationError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="childShareFactor">Child Share Factor</label>
+                    <input type="number" id="childShareFactor" min="0" value="0" step="0.1">
+                    <span id="childShareFactorError" class="error-message"></span>
+                </div>
+                
+                <!-- Emissions factors for different fuel types -->
+                <div class="input-group">
+                    <label for="gridEmissionsFactor">Grid Emissions Factor (t/kWh)</label>
+                    <input type="number" id="gridEmissionsFactor" min="0" value="0.0007" step="any">
+                    <span id="gridEmissionsFactorError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="gasEmissionsFactor">Gas Emissions Factor (t/GJ)</label>
+                    <input type="number" id="gasEmissionsFactor" min="0" value="0.051" step="any">
+                    <span id="gasEmissionsFactorError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="petrolEmissionsFactor">Petrol Emissions Factor (t/L)</label>
+                    <input type="number" id="petrolEmissionsFactor" min="0" value="0.0023" step="any">
+                    <span id="petrolEmissionsFactorError" class="error-message"></span>
+                </div>
+                
+                <!-- Pass-through rates for different fuel types -->
+                <div class="input-group">
+                    <label for="passThroughElectricity">Pass-Through Rate — Electricity</label>
+                    <input type="number" id="passThroughElectricity" min="0" max="1" value="1" step="0.01">
+                    <span id="passThroughElectricityError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="passThroughGas">Pass-Through Rate — Gas</label>
+                    <input type="number" id="passThroughGas" min="0" max="1" value="1" step="0.01">
+                    <span id="passThroughGasError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="passThroughPetrol">Pass-Through Rate — Petrol</label>
+                    <input type="number" id="passThroughPetrol" min="0" max="1" value="1" step="0.01">
+                    <span id="passThroughPetrolError" class="error-message"></span>
+                </div>
             </div>
         </div>
         

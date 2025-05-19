@@ -215,7 +215,8 @@ function validateInput(inputElement, errorElement, defaultValue, options = {}) {
     
     // Check if within range
     if (parsedValue < min) {
-        errorElement.textContent = `Invalid: must be at least ${min}.`;
+        // Use the special message if available, otherwise use the default message
+        errorElement.textContent = specialMsg || `Invalid: must be at least ${min}.`;
         inputElement.classList.add('input-error');
         return { isValid: false, value: defaultValue };
     }
@@ -227,7 +228,7 @@ function validateInput(inputElement, errorElement, defaultValue, options = {}) {
     }
     
     // Check special conditions
-    if (specialMsg && !options.isValid?.(parsedValue)) {
+    if (specialMsg && options.isValid && !options.isValid(parsedValue)) {
         errorElement.textContent = specialMsg;
         inputElement.classList.add('input-error');
         return { isValid: false, value: defaultValue };
@@ -346,7 +347,7 @@ function getPolicyAssumptions() {
         eligibleAdultPopulationError, 
         Calculator.DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation,
         { 
-            min: 0, // Allow 0 now, it will be handled by the calculator functions
+            min: 1, // Must be at least 1 to avoid division by zero
             specialMsg: "Population must be greater than 0 for calculations."
         }
     );
@@ -418,6 +419,12 @@ function performCalculationsAndUpdateDisplay() {
     // Get current inputs with validation
     const userInputs = getUserInputs();
     const policyAssumptions = getPolicyAssumptions();
+    
+    // Check if eligible adult population is valid
+    if (policyAssumptions.eligibleAdultPopulation <= 0) {
+        eligibleAdultPopulationError.textContent = "Population must be greater than 0 for calculations.";
+        eligibleAdultPopulationInput.classList.add('input-error');
+    }
     
     // Perform all calculations
     // 1. Revenue and dividend calculations
@@ -520,9 +527,13 @@ function performCalculationsAndUpdateDisplay() {
         // Headline - handle positive/negative net benefit
         if (netAnnualBenefit >= 0) {
             outputHeadline.textContent = `Your household's net benefit is ${formatCurrency(netAnnualBenefit)} per year.`;
+            outputHeadline.classList.remove('negative-value');
+            outputHeadline.classList.add('positive-value');
         } else {
             // Display as positive number but indicate it's a cost
             outputHeadline.textContent = `Your household's net cost is ${formatCurrency(-netAnnualBenefit)} per year.`;
+            outputHeadline.classList.remove('positive-value');
+            outputHeadline.classList.add('negative-value');
         }
         
         // Narrative
@@ -538,8 +549,22 @@ function performCalculationsAndUpdateDisplay() {
         tableExtraCostAnnual.textContent = formatCurrency(totalAnnualExtraCost);
         tableExtraCostMonthly.textContent = formatCurrency(totalMonthlyExtraCost);
         
+        // Apply color to net benefit values in the table
         tableNetBenefitAnnual.textContent = formatCurrency(netAnnualBenefit, true);
         tableNetBenefitMonthly.textContent = formatCurrency(netMonthlyBenefit, true);
+        
+        // Set color based on positive/negative value
+        if (netAnnualBenefit < 0) {
+            tableNetBenefitAnnual.classList.remove('positive-value');
+            tableNetBenefitAnnual.classList.add('negative-value');
+            tableNetBenefitMonthly.classList.remove('positive-value');
+            tableNetBenefitMonthly.classList.add('negative-value');
+        } else {
+            tableNetBenefitAnnual.classList.remove('negative-value');
+            tableNetBenefitAnnual.classList.add('positive-value');
+            tableNetBenefitMonthly.classList.remove('negative-value');
+            tableNetBenefitMonthly.classList.add('positive-value');
+        }
     }
     
     // Update Calculation Details Tab
@@ -555,6 +580,14 @@ function performCalculationsAndUpdateDisplay() {
     detailsTotalAnnualHouseholdCost.textContent = formatCurrency(totalAnnualExtraCost);
     detailsAnnualHouseholdDividend.textContent = formatCurrency(householdAnnualDividend);
     detailsNetAnnualBenefit.textContent = formatCurrency(netAnnualBenefit, true);
+    // Set color for net annual benefit in details tab
+    if (netAnnualBenefit < 0) {
+        detailsNetAnnualBenefit.classList.remove('positive-value');
+        detailsNetAnnualBenefit.classList.add('negative-value');
+    } else {
+        detailsNetAnnualBenefit.classList.remove('negative-value');
+        detailsNetAnnualBenefit.classList.add('positive-value');
+    }
 }
 
 // ============================================================================
@@ -622,6 +655,11 @@ function setupBlurEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
     // Show the main calculator tab by default
     showTab('main-calculator-tab');
+    
+    // Clear any initial error messages
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+    });
     
     // Set up all event listeners
     setupInputEventListeners();
