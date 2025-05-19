@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Dividend Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+        <nav id="tab-navigation">
+            <button id="btn-main-calculator" class="tab-button active">Main Calculator</button>
+            <button id="btn-background-assumptions" class="tab-button">Background Assumptions</button>
+            <button id="btn-calculation-details" class="tab-button">Calculation Details</button>
+        </nav>
+        
+        <div id="main-calculator-tab" class="tab-content active-tab">
+            <h2>User Inputs</h2>
+            <div class="input-group">
+                <label for="numAdults">Number of adults in household</label>
+                <input type="number" id="numAdults" min="0" value="2">
+                <span id="numAdultsError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="numChildren">Number of eligible children</label>
+                <input type="number" id="numChildren" min="0" value="0">
+                <span id="numChildrenError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="annualElectricityKwh">Annual household electricity use (kWh)</label>
+                <input type="number" id="annualElectricityKwh" min="0" value="5000">
+                <span id="annualElectricityKwhError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="annualGasGj">Annual household gas use (GJ)</label>
+                <input type="number" id="annualGasGj" min="0" value="20">
+                <span id="annualGasGjError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="annualPetrolL">Annual household petrol use (L)</label>
+                <input type="number" id="annualPetrolL" min="0" value="1600">
+                <span id="annualPetrolLError" class="error-message"></span>
+            </div>
+            
+            <h2>Outputs</h2>
+            <h3 id="output-headline">Your household's net benefit is $X per year.</h3>
+            <p id="output-narrative">With these settings, your household receives a total annual dividend of $Y and pays an estimated $Z in extra costs, giving a net benefit of $X per year.</p>
+            
+            <table id="output-table">
+                <thead>
+                    <tr>
+                        <th>Figure</th>
+                        <th>Annual</th>
+                        <th>Monthly</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Per-adult dividend</td>
+                        <td id="table-adult-dividend-annual">$A</td>
+                        <td id="table-adult-dividend-monthly">$a</td>
+                    </tr>
+                    <tr>
+                        <td>Per-household dividend</td>
+                        <td id="table-household-dividend-annual">$B</td>
+                        <td id="table-household-dividend-monthly">$b</td>
+                    </tr>
+                    <tr>
+                        <td>Total extra household cost</td>
+                        <td id="table-extra-cost-annual">$C</td>
+                        <td id="table-extra-cost-monthly">$c</td>
+                    </tr>
+                    <tr>
+                        <td>Net benefit</td>
+                        <td id="table-net-benefit-annual">$D</td>
+                        <td id="table-net-benefit-monthly">$d</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="background-assumptions-tab" class="tab-content">
+            <h2>Background Policy Assumptions</h2>
+            
+            <div class="input-group">
+                <label for="carbonPrice">Carbon Price ($/t CO₂-e)</label>
+                <input type="number" id="carbonPrice" min="0" value="50" step="0.01">
+                <span id="carbonPriceError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="totalCoveredEmissions">Total Covered Emissions (Mt CO₂-e)</label>
+                <input type="number" id="totalCoveredEmissions" min="0" value="466" step="0.01">
+                <span id="totalCoveredEmissionsError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="adminCostRate">Administrative Cost Rate</label>
+                <input type="number" id="adminCostRate" min="0" max="1" value="0.10" step="0.01">
+                <span id="adminCostRateError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="eligibleAdultPopulation">Eligible Adult Population</label>
+                <input type="number" id="eligibleAdultPopulation" min="1" value="16000000">
+                <span id="eligibleAdultPopulationError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="childShareFactor">Child Share Factor</label>
+                <input type="number" id="childShareFactor" min="0" value="0" step="0.1">
+                <span id="childShareFactorError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="gridEmissionsFactor">Grid Emissions Factor (t/kWh)</label>
+                <input type="number" id="gridEmissionsFactor" min="0" value="0.0007" step="any">
+                <span id="gridEmissionsFactorError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="gasEmissionsFactor">Gas Emissions Factor (t/GJ)</label>
+                <input type="number" id="gasEmissionsFactor" min="0" value="0.051" step="any">
+                <span id="gasEmissionsFactorError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="petrolEmissionsFactor">Petrol Emissions Factor (t/L)</label>
+                <input type="number" id="petrolEmissionsFactor" min="0" value="0.0023" step="any">
+                <span id="petrolEmissionsFactorError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="passThroughElectricity">Pass-Through Rate — Electricity</label>
+                <input type="number" id="passThroughElectricity" min="0" max="1" value="1" step="0.01">
+                <span id="passThroughElectricityError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="passThroughGas">Pass-Through Rate — Gas</label>
+                <input type="number" id="passThroughGas" min="0" max="1" value="1" step="0.01">
+                <span id="passThroughGasError" class="error-message"></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="passThroughPetrol">Pass-Through Rate — Petrol</label>
+                <input type="number" id="passThroughPetrol" min="0" max="1" value="1" step="0.01">
+                <span id="passThroughPetrolError" class="error-message"></span>
+            </div>
+        </div>
+        
+        <div id="calculation-details-tab" class="tab-content">
+            <h2>Calculation Details (Read-Only)</h2>
+            
+            <div class="detail-row">
+                <div class="detail-label">Gross Revenue:</div>
+                <div id="details-gross-revenue" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Net Revenue (after admin):</div>
+                <div id="details-net-revenue" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Per-Adult Dividend (annual):</div>
+                <div id="details-per-adult-dividend" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Extra Cost per kWh Electricity:</div>
+                <div id="details-cost-electricity-per-unit" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Extra Cost per GJ Gas:</div>
+                <div id="details-cost-gas-per-unit" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Extra Cost per L Petrol:</div>
+                <div id="details-cost-petrol-per-unit" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Annual Extra Electricity Cost:</div>
+                <div id="details-annual-cost-electricity" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Annual Extra Gas Cost:</div>
+                <div id="details-annual-cost-gas" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Annual Extra Petrol Cost:</div>
+                <div id="details-annual-cost-petrol" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Total Annual Extra Household Cost:</div>
+                <div id="details-total-annual-household-cost" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Total Annual Household Dividend:</div>
+                <div id="details-annual-household-dividend" class="detail-value">[value]</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Net Annual Household Benefit:</div>
+                <div id="details-net-annual-benefit" class="detail-value">[value]</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Model based on UNSW Australian Carbon Dividend Plan.</p>
+        <p>Text, photos and graphics © Citizens' Climate Lobby (CCL) Australia or used with permission. All rights reserved. Text available under Creative Commons NC SA licence.</p>
+        <div id="privacy-notice">
+            <p><strong>Privacy Notice:</strong> No data is saved or shared.</p>
+        </div>
+    </footer>
+    
+    <script src="calculator.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
