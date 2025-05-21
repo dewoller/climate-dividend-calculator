@@ -43,9 +43,10 @@ const tableNetBenefitMonthly = document.getElementById('table-net-benefit-monthl
 
 // Background Assumptions - Input fields
 const carbonPriceInput = document.getElementById('carbonPrice');
-const totalCoveredEmissionsInput = document.getElementById('totalCoveredEmissions');
-const adminCostRateInput = document.getElementById('adminCostRate');
-const eligibleAdultPopulationInput = document.getElementById('eligibleAdultPopulation');
+const nationalEmissionsInput = document.getElementById('nationalEmissionsInput');
+const householdRebateShareInput = document.getElementById('householdRebateShareInput');
+const populationInput = document.getElementById('populationInput');
+const adultShareInput = document.getElementById('adultShareInput');
 const childShareFactorInput = document.getElementById('childShareFactor');
 const gridEmissionsFactorInput = document.getElementById('gridEmissionsFactor');
 const gasEmissionsFactorInput = document.getElementById('gasEmissionsFactor');
@@ -56,9 +57,10 @@ const passThroughPetrolInput = document.getElementById('passThroughPetrol');
 
 // Background Assumptions - Error message elements
 const carbonPriceError = document.getElementById('carbonPriceError');
-const totalCoveredEmissionsError = document.getElementById('totalCoveredEmissionsError');
-const adminCostRateError = document.getElementById('adminCostRateError');
-const eligibleAdultPopulationError = document.getElementById('eligibleAdultPopulationError');
+const nationalEmissionsError = document.getElementById('nationalEmissionsError');
+const householdRebateShareError = document.getElementById('householdRebateShareError');
+const populationError = document.getElementById('populationError');
+const adultShareError = document.getElementById('adultShareError');
 const childShareFactorError = document.getElementById('childShareFactorError');
 const gridEmissionsFactorError = document.getElementById('gridEmissionsFactorError');
 const gasEmissionsFactorError = document.getElementById('gasEmissionsFactorError');
@@ -69,7 +71,6 @@ const passThroughPetrolError = document.getElementById('passThroughPetrolError')
 
 // Calculation Details - Display elements
 const detailsGrossRevenue = document.getElementById('details-gross-revenue');
-const detailsNetRevenue = document.getElementById('details-net-revenue');
 const detailsPerAdultDividend = document.getElementById('details-per-adult-dividend');
 const detailsCostElectricityPerUnit = document.getElementById('details-cost-electricity-per-unit');
 const detailsCostGasPerUnit = document.getElementById('details-cost-gas-per-unit');
@@ -319,39 +320,55 @@ function getPolicyAssumptions() {
     const policyAssumptions = {...Calculator.DEFAULT_POLICY_ASSUMPTIONS};
     
     // Validate each input and update values
-    const carbonPriceResult = validateInput(
-        carbonPriceInput, 
-        carbonPriceError, 
-        Calculator.DEFAULT_POLICY_ASSUMPTIONS.carbonPrice
-    );
-    policyAssumptions.carbonPrice = carbonPriceResult.value;
+    // For carbonPrice, it's now a <select> element
+    const carbonPriceValue = parseFloat(carbonPriceInput.value);
+    if (isNaN(carbonPriceValue)) {
+        policyAssumptions.carbonPrice = Calculator.DEFAULT_POLICY_ASSUMPTIONS.carbonPrice;
+    } else {
+        policyAssumptions.carbonPrice = carbonPriceValue;
+    }
     
-    // For totalCoveredEmissions, we convert from Mt to t (multiply by 1,000,000)
-    const totalCoveredEmissionsResult = validateInput(
-        totalCoveredEmissionsInput, 
-        totalCoveredEmissionsError, 
-        Calculator.DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions / 1000000
+    // For nationalEmissions, we convert from Mt to t (multiply by 1,000,000)
+    const nationalEmissionsResult = validateInput(
+        nationalEmissionsInput, 
+        nationalEmissionsError, 
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.nationalEmissions / 1000000
     );
-    policyAssumptions.totalCoveredEmissions = totalCoveredEmissionsResult.value * 1000000;
+    policyAssumptions.nationalEmissions = nationalEmissionsResult.value * 1000000;
     
-    const adminCostRateResult = validateInput(
-        adminCostRateInput, 
-        adminCostRateError, 
-        Calculator.DEFAULT_POLICY_ASSUMPTIONS.adminCostRate,
+    // Validate householdRebateShare (0-1)
+    const householdRebateShareResult = validateInput(
+        householdRebateShareInput,
+        householdRebateShareError,
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.householdRebateShare,
         { min: 0, max: 1 }
     );
-    policyAssumptions.adminCostRate = adminCostRateResult.value;
+    policyAssumptions.householdRebateShare = householdRebateShareResult.value;
     
-    const eligibleAdultPopulationResult = validateInput(
-        eligibleAdultPopulationInput, 
-        eligibleAdultPopulationError, 
-        Calculator.DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation,
+    // Validate population (min 0)
+    const populationResult = validateInput(
+        populationInput,
+        populationError,
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.population,
         { 
-            min: 1, // Must be at least 1 to avoid division by zero
-            specialMsg: "Population must be greater than 0 for calculations."
+            min: 0,
+            specialMsg: "Population must be greater than 0 for dividend calculations."
         }
     );
-    policyAssumptions.eligibleAdultPopulation = eligibleAdultPopulationResult.value;
+    policyAssumptions.population = populationResult.value;
+    
+    // Validate adultShare (0-1)
+    const adultShareResult = validateInput(
+        adultShareInput,
+        adultShareError,
+        Calculator.DEFAULT_POLICY_ASSUMPTIONS.adultShare,
+        { 
+            min: 0, 
+            max: 1,
+            specialMsg: "Adult share must be greater than 0 for dividend calculations."
+        }
+    );
+    policyAssumptions.adultShare = adultShareResult.value;
     
     const childShareFactorResult = validateInput(
         childShareFactorInput, 
@@ -420,27 +437,32 @@ function performCalculationsAndUpdateDisplay() {
     const userInputs = getUserInputs();
     const policyAssumptions = getPolicyAssumptions();
     
-    // Check if eligible adult population is valid
-    if (policyAssumptions.eligibleAdultPopulation <= 0) {
-        eligibleAdultPopulationError.textContent = "Population must be greater than 0 for calculations.";
-        eligibleAdultPopulationInput.classList.add('input-error');
+    // Check if population or adult share is valid
+    if (policyAssumptions.population <= 0 || policyAssumptions.adultShare <= 0) {
+        if (policyAssumptions.population <= 0) {
+            populationError.textContent = "Population must be greater than 0 for dividend calculations.";
+            populationInput.classList.add('input-error');
+        }
+        
+        if (policyAssumptions.adultShare <= 0) {
+            adultShareError.textContent = "Adult share must be greater than 0 for dividend calculations.";
+            adultShareInput.classList.add('input-error');
+        }
     }
     
     // Perform all calculations
     // 1. Revenue and dividend calculations
     const grossRevenue = Calculator.calculateGrossRevenue(
         policyAssumptions.carbonPrice, 
-        policyAssumptions.totalCoveredEmissions
+        policyAssumptions.nationalEmissions
     );
     
-    const netRevenue = Calculator.calculateNetRevenue(
-        grossRevenue, 
-        policyAssumptions.adminCostRate
-    );
-    
-    const adultAnnualDividend = Calculator.calculateAdultDividend(
-        netRevenue, 
-        policyAssumptions.eligibleAdultPopulation
+    const adultAnnualDividend = Calculator.calculatePerAdultDividend(
+        policyAssumptions.carbonPrice,
+        policyAssumptions.nationalEmissions,
+        policyAssumptions.householdRebateShare,
+        policyAssumptions.population,
+        policyAssumptions.adultShare
     );
     
     const householdAnnualDividend = Calculator.calculateHouseholdDividend(
@@ -507,8 +529,8 @@ function performCalculationsAndUpdateDisplay() {
     // Handle division by zero case (null values)
     if (adultAnnualDividend === null) {
         // When adult dividend is null (division by zero), update outputs accordingly
-        outputHeadline.textContent = `Unable to calculate net benefit with population of zero.`;
-        outputNarrative.textContent = `With these settings, dividend calculation is not possible (population is zero). Please enter a positive population value.`;
+        outputHeadline.textContent = `Unable to calculate net benefit with invalid population values.`;
+        outputNarrative.textContent = `With these settings, dividend calculation is not possible (e.g., population or adult share is zero). Please check the Background Assumptions.`;
         
         // Update table values with "—" for affected fields
         tableAdultDividendAnnual.textContent = "—";
@@ -537,7 +559,7 @@ function performCalculationsAndUpdateDisplay() {
         }
         
         // Narrative
-        outputNarrative.textContent = `With these settings, your household receives a total annual dividend of ${formatCurrency(householdAnnualDividend)} and pays an estimated ${formatCurrency(totalAnnualExtraCost)} in extra costs, giving a net ${netAnnualBenefit >= 0 ? 'benefit' : 'cost'} of ${formatCurrency(Math.abs(netAnnualBenefit))} per year.`;
+        outputNarrative.textContent = `With these settings, the total funds available for dividends are derived from the carbon price on national emissions. Your household receives a total annual dividend of ${formatCurrency(householdAnnualDividend)} and pays an estimated ${formatCurrency(totalAnnualExtraCost)} in extra costs, giving a net ${netAnnualBenefit >= 0 ? 'benefit' : 'cost'} of ${formatCurrency(Math.abs(netAnnualBenefit))} per year.`;
         
         // Update table values
         tableAdultDividendAnnual.textContent = formatCurrency(adultAnnualDividend);
@@ -569,7 +591,6 @@ function performCalculationsAndUpdateDisplay() {
     
     // Update Calculation Details Tab
     detailsGrossRevenue.textContent = formatCurrency(grossRevenue);
-    detailsNetRevenue.textContent = formatCurrency(netRevenue);
     detailsPerAdultDividend.textContent = formatCurrency(adultAnnualDividend);
     detailsCostElectricityPerUnit.textContent = formatUnitCost(extraCostPerKwh, "/kWh");
     detailsCostGasPerUnit.textContent = formatUnitCost(extraCostPerGj, "/GJ");
@@ -604,10 +625,11 @@ function setupInputEventListeners() {
     annualPetrolLInput.addEventListener('input', performCalculationsAndUpdateDisplay);
     
     // Background Assumptions inputs
-    carbonPriceInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-    totalCoveredEmissionsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-    adminCostRateInput.addEventListener('input', performCalculationsAndUpdateDisplay);
-    eligibleAdultPopulationInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    carbonPriceInput.addEventListener('change', performCalculationsAndUpdateDisplay);
+    nationalEmissionsInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    householdRebateShareInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    populationInput.addEventListener('input', performCalculationsAndUpdateDisplay);
+    adultShareInput.addEventListener('input', performCalculationsAndUpdateDisplay);
     childShareFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
     gridEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
     gasEmissionsFactorInput.addEventListener('input', performCalculationsAndUpdateDisplay);
@@ -627,13 +649,16 @@ function setupBlurEventListeners() {
     setupBlurHandler(annualPetrolLInput, annualPetrolLError, Calculator.DEFAULT_USER_INPUTS.annualPetrolL);
     
     // Background Assumptions inputs
-    setupBlurHandler(carbonPriceInput, carbonPriceError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.carbonPrice);
-    // For totalCoveredEmissions, we store Mt in the UI but t in the calculator
-    setupBlurHandler(totalCoveredEmissionsInput, totalCoveredEmissionsError, 
-                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.totalCoveredEmissions / 1000000);
-    setupBlurHandler(adminCostRateInput, adminCostRateError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.adminCostRate);
-    setupBlurHandler(eligibleAdultPopulationInput, eligibleAdultPopulationError, 
-                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.eligibleAdultPopulation);
+    // Note: No blur handler for carbonPriceInput since it's a <select>
+    // For nationalEmissions, we store Mt in the UI but t in the calculator
+    setupBlurHandler(nationalEmissionsInput, nationalEmissionsError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.nationalEmissions / 1000000);
+    setupBlurHandler(householdRebateShareInput, householdRebateShareError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.householdRebateShare);
+    setupBlurHandler(populationInput, populationError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.population);
+    setupBlurHandler(adultShareInput, adultShareError, 
+                    Calculator.DEFAULT_POLICY_ASSUMPTIONS.adultShare);
     setupBlurHandler(childShareFactorInput, childShareFactorError, Calculator.DEFAULT_POLICY_ASSUMPTIONS.childShareFactor);
     setupBlurHandler(gridEmissionsFactorInput, gridEmissionsFactorError, 
                     Calculator.DEFAULT_POLICY_ASSUMPTIONS.gridEmissionsFactor);

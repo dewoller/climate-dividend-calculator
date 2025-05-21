@@ -100,30 +100,42 @@
             <h2>Background Policy Assumptions</h2>
             
             <div class="input-container">
-                <!-- Policy parameters - Carbon pricing and emissions -->
+                <!-- Policy parameters and inputs -->
                 <div class="input-group">
                     <label for="carbonPrice">Carbon Price ($/t CO₂-e)</label>
-                    <input type="number" id="carbonPrice" min="0" value="50" step="0.01">
+                    <select id="carbonPrice">
+                        <option value="50" selected>50</option>
+                        <option value="40">40</option>
+                        <option value="30">30</option>
+                        <option value="20">20</option>
+                        <option value="15">15</option>
+                        <option value="10">10</option>
+                    </select>
                     <span id="carbonPriceError" class="error-message"></span>
                 </div>
                 
                 <div class="input-group">
-                    <label for="totalCoveredEmissions">Total Covered Emissions (Mt CO₂-e)</label>
-                    <input type="number" id="totalCoveredEmissions" min="0" value="466" step="0.01">
-                    <span id="totalCoveredEmissionsError" class="error-message"></span>
-                </div>
-                
-                <!-- Administrative parameters -->
-                <div class="input-group">
-                    <label for="adminCostRate">Administrative Cost Rate</label>
-                    <input type="number" id="adminCostRate" min="0" max="1" value="0.10" step="0.01">
-                    <span id="adminCostRateError" class="error-message"></span>
+                    <label for="nationalEmissionsInput">National Emissions (Mt CO₂-e)</label>
+                    <input type="number" id="nationalEmissionsInput" min="0" value="434.9" step="0.01">
+                    <span id="nationalEmissionsError" class="error-message"></span>
                 </div>
                 
                 <div class="input-group">
-                    <label for="eligibleAdultPopulation">Eligible Adult Population</label>
-                    <input type="number" id="eligibleAdultPopulation" min="1" step="1" required value="16000000">
-                    <span id="eligibleAdultPopulationError" class="error-message"></span>
+                    <label for="householdRebateShareInput">Household Rebate Share</label>
+                    <input type="number" id="householdRebateShareInput" min="0" max="1" value="0.90" step="0.01">
+                    <span id="householdRebateShareError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="populationInput">Total Population (persons)</label>
+                    <input type="number" id="populationInput" min="0" step="1" value="27204809">
+                    <span id="populationError" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="adultShareInput">Adult Share (15+ years)</label>
+                    <input type="number" id="adultShareInput" min="0" max="1" value="0.811" step="0.001">
+                    <span id="adultShareError" class="error-message"></span>
                 </div>
                 
                 <div class="input-group">
@@ -180,11 +192,6 @@
             <div class="detail-row">
                 <div class="detail-label">Gross Revenue:</div>
                 <div id="details-gross-revenue" class="detail-value">[value]</div>
-            </div>
-            
-            <div class="detail-row">
-                <div class="detail-label">Net Revenue (after admin):</div>
-                <div id="details-net-revenue" class="detail-value">[value]</div>
             </div>
             
             <div class="detail-row">

@@ -14,10 +14,11 @@
  */
 const DEFAULT_POLICY_ASSUMPTIONS = {
     carbonPrice: 50,                   // A$/t CO₂-e - The carbon price in Australian dollars per tonne of CO2 equivalent
-    totalCoveredEmissions: 466000000,  // t CO₂-e (466 Mt converted to t for consistent units) - Total emissions covered by the scheme
-    adminCostRate: 0.10,               // Administrative cost rate (decimal) - Fraction of gross revenue used for administration
-    eligibleAdultPopulation: 16000000, // Number of eligible adults - Population receiving dividends
-    childShareFactor: 0.5,               // Child share factor (decimal) - Portion of adult dividend allocated per child
+    nationalEmissions: 434900000,      // t CO₂-e (434.9 Mt converted to t for consistent units) - Total national emissions
+    householdRebateShare: 0.90,        // Decimal (0.9 = 90%) - Portion of revenue allocated to household rebates
+    population: 27204809,              // Total population of the country
+    adultShare: 0.811,                 // Decimal (0.811 = 81.1%) - Fraction of population that are adults (15+ years)
+    childShareFactor: 0.5,             // Child share factor (decimal) - Portion of adult dividend allocated per child
     gridEmissionsFactor: 0.0007,       // t/kWh - Carbon emissions per kilowatt-hour of electricity
     gasEmissionsFactor: 0.051,         // t/GJ - Carbon emissions per gigajoule of gas
     petrolEmissionsFactor: 0.0023,     // t/L - Carbon emissions per liter of petrol
@@ -44,52 +45,42 @@ const DEFAULT_USER_INPUTS = {
  * Formula: G = P × E where:
  * - G is the gross revenue
  * - P is the carbon price
- * - E is the total covered emissions
+ * - E is the national emissions
  * 
  * @param {number} carbonPrice - Carbon price in A$/t CO₂-e
- * @param {number} totalCoveredEmissions - Total covered emissions in t CO₂-e
+ * @param {number} nationalEmissions - National emissions in t CO₂-e
  * @returns {number} - Gross revenue in A$
  */
-function calculateGrossRevenue(carbonPrice, totalCoveredEmissions) {
+function calculateGrossRevenue(carbonPrice, nationalEmissions) {
     // G = P × E
-    return carbonPrice * totalCoveredEmissions;
-}
-
-/**
- * Calculate net revenue after administrative costs
- * Formula: R = G × (1 - r) where:
- * - R is the net revenue
- * - G is the gross revenue
- * - r is the administrative cost rate
- * 
- * @param {number} grossRevenue - Gross revenue in A$
- * @param {number} adminCostRate - Administrative cost rate (0-1)
- * @returns {number} - Net revenue in A$
- */
-function calculateNetRevenue(grossRevenue, adminCostRate) {
-    // R = G × (1 - r)
-    return grossRevenue * (1 - adminCostRate);
+    return carbonPrice * nationalEmissions;
 }
 
 /**
  * Calculate annual dividend per adult
- * Formula: D_adult = R / N where:
- * - D_adult is the dividend per adult
- * - R is the net revenue
- * - N is the eligible adult population
+ * Formula: Per-adult dividend = (householdRebateShare × nationalEmissions × carbonPrice) ÷ (totalPopulation × adultShare) where:
+ * - householdRebateShare is the portion of revenue allocated to households (0-1)
+ * - nationalEmissions is the total national emissions in tonnes CO₂-e
+ * - carbonPrice is the carbon price in A$/t CO₂-e
+ * - totalPopulation is the total population
+ * - adultShare is the fraction of the population that are adults (0-1)
  * 
- * @param {number} netRevenue - Net revenue in A$
- * @param {number} eligibleAdultPopulation - Number of eligible adults
- * @returns {number|null} - Annual dividend per adult in A$, or null if population is 0 or invalid
+ * @param {number} carbonPrice - Carbon price in A$/t CO₂-e
+ * @param {number} nationalEmissions - National emissions in t CO₂-e
+ * @param {number} householdRebateShare - Household rebate share (0-1)
+ * @param {number} totalPopulation - Total population
+ * @param {number} adultShare - Adult share of population (0-1)
+ * @returns {number|null} - Annual dividend per adult in A$, or null if population or adultShare is 0 or invalid
  */
-function calculateAdultDividend(netRevenue, eligibleAdultPopulation) {
-    // D_adult = R / N
-    // Handle division by zero - return null if population is 0 or invalid
-    if (eligibleAdultPopulation <= 0 || !isFinite(eligibleAdultPopulation)) {
-        console.warn("Invalid eligible adult population: " + eligibleAdultPopulation);
-        return null;
+function calculatePerAdultDividend(carbonPrice, nationalEmissions, householdRebateShare, totalPopulation, adultShare) {
+    // Handle division by zero or invalid inputs
+    if (totalPopulation <= 0 || adultShare <= 0 || !isFinite(totalPopulation) || !isFinite(adultShare)) {
+        console.warn("Invalid population or adult share for dividend calculation.");
+        return null; // Return null to indicate inability to calculate
     }
-    return netRevenue / eligibleAdultPopulation;
+    
+    // Per-adult dividend = (householdRebateShare × nationalEmissions × carbonPrice) ÷ (totalPopulation × adultShare)
+    return (householdRebateShare * nationalEmissions * carbonPrice) / (totalPopulation * adultShare);
 }
 
 /**
@@ -231,8 +222,7 @@ if (typeof window !== 'undefined') {
         DEFAULT_POLICY_ASSUMPTIONS,
         DEFAULT_USER_INPUTS,
         calculateGrossRevenue,
-        calculateNetRevenue,
-        calculateAdultDividend,
+        calculatePerAdultDividend,
         calculateHouseholdDividend,
         calculateExtraCostPerUnit,
         calculateAnnualFuelCost,
